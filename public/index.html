@@ -1084,12 +1084,18 @@
                         mainContent.style.display = 'block';
                         loadDepartments();
                         initHotProcedures();
+                        // 如果有提示信息，显示提示
+                        if (data.message) {
+                            alert(data.message);
+                        }
                     } else {
+                        loginError.textContent = data.message || '用户名或密码错误';
                         loginError.style.display = 'block';
                     }
                 })
                 .catch(error => {
                     console.error('登录失败:', error);
+                    loginError.textContent = '系统错误，请稍后重试';
                     loginError.style.display = 'block';
                 });
             });
