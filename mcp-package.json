@@ -1,0 +1,22 @@
+{
+  "name": "procedure-data-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP服务器，提供手术术式数据",
+  "main": "mcp-server.js",
+  "scripts": {
+    "start": "node mcp-server.js",
+    "dev": "node mcp-server.js"
+  },
+  "keywords": [
+    "mcp",
+    "procedure",
+    "medical",
+    "data"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  }
+}

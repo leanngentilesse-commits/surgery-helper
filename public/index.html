@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>术式机器人对标助手</title>
+    <title>手术机器人对标助手</title>
     <style>
         * {
             margin: 0;
@@ -125,17 +125,96 @@
             flex-wrap: wrap;
             gap: 10px;
             margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            justify-content: center;
         }
         
         .menu-item {
             background: white;
             border: 2px solid #1E4A76;
             border-radius: 25px;
-            padding: 12px 24px;
+            padding: 12px 0;
             cursor: pointer;
             transition: all 0.3s ease;
             font-weight: bold;
             color: #1E4A76;
+            white-space: nowrap;
+            width: 100px;
+            text-align: center;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 24px;
+                margin-bottom: 20px;
+            }
+            
+            #searchInput {
+                width: 250px;
+                padding: 10px;
+                font-size: 14px;
+            }
+            
+            #searchBtn {
+                padding: 10px 20px;
+                font-size: 14px;
+                margin-left: 5px;
+            }
+            
+            .menu-item {
+                padding: 8px 0;
+                font-size: 14px;
+                width: 90px;
+                border-radius: 20px;
+            }
+            
+            /* 调整主菜单布局为网格，确保在移动设备上能显示所有科室 */
+            #mainMenu {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+                gap: 10px;
+            }
+            
+            .submenu-container {
+                padding: 20px;
+                margin-top: 20px;
+            }
+            
+            .submenu-title {
+                font-size: 20px;
+                margin-bottom: 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            #mainMenu {
+                grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+                gap: 8px;
+            }
+            
+            .menu-item {
+                padding: 6px 0;
+                font-size: 12px;
+                width: 80px;
+                border-radius: 15px;
+            }
+            
+            #searchInput {
+                width: 200px;
+                padding: 8px;
+                font-size: 12px;
+            }
+            
+            #searchBtn {
+                padding: 8px 16px;
+                font-size: 12px;
+            }
         }
         
         .menu-item:hover {
@@ -492,8 +571,8 @@
             text-decoration: underline;
         }
         
-        /* 登录模态框 */
-        #loginModal {
+        /* 登录和注册模态框 */
+        #loginModal, #registerModal {
             position: fixed;
             top: 0;
             left: 0;
@@ -504,6 +583,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            animation: fadeIn 0.3s ease;
         }
         
         #loginModal .modal-content {
@@ -513,51 +593,167 @@
             width: 400px;
             max-width: 90%;
             text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        #registerModal .modal-content {
+            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+            border-radius: 20px;
+            padding: 40px;
+            width: 400px;
+            max-width: 90%;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid #E8F0FE;
+        }
+        
+        #loginModal .modal-content:hover, #registerModal .modal-content:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.25);
         }
         
         #loginModal h2 {
             text-align: center;
             margin-bottom: 30px;
             color: #1E4A76;
+            font-size: 24px;
+            font-weight: bold;
+            position: relative;
+            padding-bottom: 15px;
         }
         
-        #loginModal label {
+        #loginModal h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #1E4A76, #4A90E2);
+            border-radius: 2px;
+        }
+        
+        #registerModal h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #1E4A76;
+            font-size: 24px;
+            font-weight: bold;
+            position: relative;
+            padding-bottom: 15px;
+        }
+        
+        #registerModal h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #4A90E2, #1E4A76);
+            border-radius: 2px;
+        }
+        
+        #loginModal label, #registerModal label {
             display: block;
             text-align: left;
             margin-bottom: 8px;
             font-weight: bold;
             color: #333;
+            font-size: 14px;
         }
         
-        #loginModal input {
+        #loginModal input, #registerModal input {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
+            padding: 14px 16px;
+            border: 2px solid #E8F0FE;
+            border-radius: 10px;
             font-size: 16px;
             margin-bottom: 20px;
+            transition: all 0.3s ease;
+            background: #f9f9f9;
         }
         
-        #loginModal input:focus {
+        #loginModal input:focus, #registerModal input:focus {
             outline: none;
             border-color: #1E4A76;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(30, 74, 118, 0.1);
         }
         
         #loginBtn {
             width: 100%;
-            padding: 12px;
-            background-color: #1E4A76;
+            padding: 14px;
+            background: linear-gradient(135deg, #1E4A76, #2A68B0);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
         }
         
         #loginBtn:hover {
-            background-color: #183B60;
+            background: linear-gradient(135deg, #183B60, #235A91);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(30, 74, 118, 0.3);
+        }
+        
+        #loginBtn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(30, 74, 118, 0.3);
+        }
+        
+        #registerBtn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #4A90E2, #6BA5F6);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+        
+        #registerBtn:hover {
+            background: linear-gradient(135deg, #357ABD, #5A90E0);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 144, 226, 0.3);
+        }
+        
+        #registerBtn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+        }
+        
+        #loginError, #registerError {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            background: #FFF2F0;
+            color: #D32F2F;
+            font-size: 14px;
+            font-weight: 500;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        #showRegisterBtn, #showLoginBtn {
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        
+        #showRegisterBtn:hover, #showLoginBtn:hover {
+            color: #2A68B0;
         }
         
         #loginError {
@@ -656,27 +852,25 @@
             </div>
             <button id="loginBtn">登录</button>
             <div id="loginError" style="display: none;">用户名或密码错误</div>
+            <div style="margin-top: 20px; text-align: center;">
+                <span>还没有账号？</span>
+                <a href="register.html" style="color: #1E4A76; text-decoration: underline; font-weight: 500;">立即注册</a>
+            </div>
         </div>
     </div>
     
+
+    
     <!-- 主界面 -->
     <div class="container" id="mainContent" style="display: none;">
-        <h1>术式机器人对标助手</h1>
+        <h1>手术机器人对标助手</h1>
         
         <div class="search-container">
-            <input type="text" id="searchInput" placeholder="搜索科室或术式...">
+            <input type="text" id="searchInput" placeholder="搜索科室、术式或品牌...">
             <button id="searchBtn">搜索</button>
         </div>
         
         <div id="searchResults" class="search-results" style="display: none;"></div>
-        
-        <!-- 热门术式区域 -->
-        <div class="hot-procedures">
-            <h2>热门术式</h2>
-            <div class="hot-procedures-grid" id="hotProceduresGrid">
-                <!-- 热门术式将通过JavaScript动态添加 -->
-            </div>
-        </div>
         
         <div class="menu-container">
             <div class="main-menu" id="mainMenu"></div>
@@ -685,6 +879,14 @@
                 <div class="organ-grid" id="organGrid"></div>
             </div>
 
+        </div>
+        
+        <!-- 热门术式区域 -->
+        <div class="hot-procedures">
+            <h2>热门术式</h2>
+            <div class="hot-procedures-grid" id="hotProceduresGrid">
+                <!-- 热门术式将通过JavaScript动态添加 -->
+            </div>
         </div>
     </div>
     
@@ -696,7 +898,7 @@
                 <button id="backBtn" style="background: #1E4A76; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; display: flex; align-items: center; gap: 8px;">
                     ← 返回科室选择
                 </button>
-                <h1 style="color: #1E4A76; font-size: 32px; margin: 0;">术式详情</h1>
+                <h1 id="procedureTitle" style="color: #1E4A76; font-size: 32px; margin: 0;">术式详情</h1>
                 <div style="width: 150px;"></div> <!-- 占位，保持标题居中 -->
             </div>
             
@@ -808,7 +1010,10 @@
             <!-- 竞品分析页面 -->
             <div id="competitorsPage" style="display: none; animation: fadeIn 0.5s ease-in-out;">
                 <div style="background: white; border-radius: 16px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.12); margin-bottom: 30px; transition: transform 0.3s ease, box-shadow 0.3s ease;">
-                    <h2 style="color: #1E4A76; font-size: 24px; margin-bottom: 30px;">机器人手术产品核心参数对比</h2>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                        <h2 style="color: #1E4A76; font-size: 24px; margin: 0;">机器人手术产品核心参数对比</h2>
+                        <button id="updateCompetitorsBtn" style="display: none; padding: 12px 24px; background: linear-gradient(135deg, #357ABD, #4A90E2); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);">更新数据</button>
+                    </div>
                     <div class="competitors-list" id="competitorsList" style="margin-top: 20px;">
                         <!-- 机器人手术产品核心参数将通过JavaScript动态生成 -->
                     </div>
@@ -839,10 +1044,16 @@
         .nav-btn.active:hover {
             background: #183B60 !important;
         }
+        
+        #updateCompetitorsBtn:active {
+            background: linear-gradient(135deg, #1E4A76, #2A68B0) !important;
+            transform: translateY(2px);
+        }
     </style>
     
     <script>
         let isLoggedIn = false;
+        let currentUser = null;
         
         // 登录逻辑
         function initLogin() {
@@ -851,20 +1062,36 @@
             const mainContent = document.getElementById('mainContent');
             const loginError = document.getElementById('loginError');
             
+            // 登录按钮点击事件
             loginBtn.addEventListener('click', function() {
                 const username = document.getElementById('loginUsername').value;
                 const password = document.getElementById('loginPassword').value;
                 
-                // 验证登录信息
-                if (username === 'admin' && password === '123') {
-                    isLoggedIn = true;
-                    loginModal.style.display = 'none';
-                    mainContent.style.display = 'block';
-                    loadDepartments();
-                    initHotProcedures();
-                } else {
+                // 从数据库验证
+                fetch('/api/users/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        isLoggedIn = true;
+                        currentUser = username;
+                        loginModal.style.display = 'none';
+                        mainContent.style.display = 'block';
+                        loadDepartments();
+                        initHotProcedures();
+                    } else {
+                        loginError.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('登录失败:', error);
                     loginError.style.display = 'block';
-                }
+                });
             });
         }
         
@@ -951,17 +1178,8 @@
             { name: "静脉", order: 3, procedures: ["大隐静脉曲张手术", "深静脉血栓形成取栓术"] },
             { name: "内脏血管", order: 4, procedures: ["肾动脉狭窄成形术", "肠系膜上动脉栓塞取栓术"] }
           ]},
-          { id: "pediatric", name: "小儿外科", organs: [
-            { name: "消化系统", order: 1, procedures: ["巨结肠根治术", "先天性肠闭锁手术", "幽门肥厚性狭窄成形术"] },
-            { name: "泌尿系统", order: 2, procedures: ["先天性肾盂输尿管连接部梗阻成形术", "尿道下裂修复术"] },
-            { name: "胸外科", order: 3, procedures: ["先天性食管闭锁修复术", "先天性膈疝修补术"] },
-            { name: "骨科", order: 4, procedures: ["先天性髋关节脱位矫治术", "先天性马蹄内翻足矫治术"] }
-          ]},
-          { id: "plastic", name: "整形外科", organs: [
-            { name: "乳房", order: 1, procedures: ["乳房重建术", "隆乳术", "乳房缩小术"] },
-            { name: "面部", order: 2, procedures: ["隆鼻术", "重睑成形术", "面部除皱术"] },
-            { name: "体型雕塑", order: 3, procedures: ["吸脂术", "腹壁成形术"] },
-            { name: "修复重建", order: 4, procedures: ["烧伤瘢痕修复术", "先天性唇腭裂修复术"] }
+          { id: "dental", name: "口腔科", organs: [
+            { name: "口腔", order: 1, procedures: ["口腔种植手术", "根管治疗术"] }
           ]}
         ];
         
@@ -1034,151 +1252,632 @@
             });
         }
         
-        // 加载术式详情
-        function loadProcedure(procedureName) {
-            fetch(`http://localhost:3002/api/procedures/${encodeURIComponent(procedureName)}`)
-                .then(response => response.json())
-                .then(data => {
-                    // 使用默认数据作为 fallback
-                    const procedureData = getDefaultProcedureData(procedureName, data);
-                    
-                    // 填充术式信息
-                    document.getElementById('procedureName').textContent = procedureData.name;
-                    document.getElementById('procedureDept').textContent = `科室: ${procedureData.dept}`;
-                    document.getElementById('procedureOrgan').textContent = `器官: ${procedureData.organ}`;
-                    document.getElementById('procedureIndications').textContent = procedureData.indications;
-                    document.getElementById('procedureContraindications').textContent = procedureData.contraindications;
-                    document.getElementById('guidelineDiff').textContent = procedureData.guidelineDiff;
-                    
-                    // 填充临床指标
-                    const clinicalMetrics = document.getElementById('clinicalMetrics');
-                    clinicalMetrics.innerHTML = '';
-                    if (procedureData.clinicalMetrics && Array.isArray(procedureData.clinicalMetrics)) {
-                        procedureData.clinicalMetrics.forEach(metric => {
-                            const metricCard = document.createElement('div');
-                            metricCard.style = 'background: #f9f9f9; padding: 20px; border-radius: 12px; border-left: 4px solid #1E4A76; margin-bottom: 15px;';
-                            metricCard.innerHTML = `
-                                <div style="font-weight: bold; margin-bottom: 8px; color: #333;">${metric.name}</div>
-                                <div style="color: #1E4A76; font-size: 18px; margin-bottom: 8px;">${metric.value}</div>
-                                <div style="font-size: 14px; color: #666;">${metric.desc}</div>
-                            `;
-                            clinicalMetrics.appendChild(metricCard);
-                        });
-                    }
-                    
-                    // 填充手术指标
-                    const operationMetrics = document.getElementById('operationMetrics');
-                    operationMetrics.innerHTML = '';
-                    if (procedureData.operationMetrics && Array.isArray(procedureData.operationMetrics)) {
-                        procedureData.operationMetrics.forEach(metric => {
-                            const metricCard = document.createElement('div');
-                            metricCard.style = 'background: #f9f9f9; padding: 20px; border-radius: 12px; border-left: 4px solid #1E4A76; margin-bottom: 15px;';
-                            metricCard.innerHTML = `
-                                <div style="font-weight: bold; margin-bottom: 8px; color: #333;">${metric.name}</div>
-                                <div style="color: #1E4A76; font-size: 18px; margin-bottom: 8px;">${metric.value}</div>
-                                <div style="font-size: 14px; color: #666;">${metric.desc}</div>
-                            `;
-                            operationMetrics.appendChild(metricCard);
-                        });
-                    }
-                    
-                    // 填充手术步骤
-                    const procedureSteps = document.getElementById('procedureSteps');
-                    procedureSteps.innerHTML = '';
-                    if (procedureData.steps && Array.isArray(procedureData.steps)) {
-                        procedureData.steps.forEach(step => {
-                            const stepItem = document.createElement('div');
-                            stepItem.style = 'display: flex; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #E2E8F0;';
-                            stepItem.innerHTML = `
-                                <div style="width: 100px; font-weight: bold; color: #1E4A76; font-size: 16px;">${step.timestamp}s</div>
-                                <div style="flex: 1; font-size: 16px; color: #333;">${step.name}</div>
-                            `;
-                            procedureSteps.appendChild(stepItem);
-                        });
-                    }
-                    
-                    // 设置视频源
-                    document.getElementById('traditionalVideo').src = getVideoUrl(procedureData.traditionalVideo);
-                    document.getElementById('roboticVideo').src = getVideoUrl(procedureData.roboticVideo);
-                    
-                    // 加载竞品数据
-                    loadCompetitors(procedureName);
-                    
-                    // 隐藏主界面，显示术式详情界面
-                    document.getElementById('mainContent').style.display = 'none';
-                    document.getElementById('procedurePage').style.display = 'block';
-                })
-                .catch(error => {
-                    console.error('Error loading procedure:', error);
-                    // 使用默认数据
-                    const procedureData = getDefaultProcedureData(procedureName);
-                    
-                    // 填充术式信息
-                    document.getElementById('procedureName').textContent = procedureData.name;
-                    document.getElementById('procedureDept').textContent = `科室: ${procedureData.dept}`;
-                    document.getElementById('procedureOrgan').textContent = `器官: ${procedureData.organ}`;
-                    document.getElementById('procedureIndications').textContent = procedureData.indications;
-                    document.getElementById('procedureContraindications').textContent = procedureData.contraindications;
-                    document.getElementById('guidelineDiff').textContent = procedureData.guidelineDiff;
-                    
-                    // 填充临床指标
-                    const clinicalMetrics = document.getElementById('clinicalMetrics');
-                    clinicalMetrics.innerHTML = '';
-                    procedureData.clinicalMetrics.forEach(metric => {
-                        const metricCard = document.createElement('div');
-                        metricCard.style = 'background: #f9f9f9; padding: 20px; border-radius: 12px; border-left: 4px solid #1E4A76; margin-bottom: 15px;';
-                        metricCard.innerHTML = `
-                            <div style="font-weight: bold; margin-bottom: 8px; color: #333;">${metric.name}</div>
-                            <div style="color: #1E4A76; font-size: 18px; margin-bottom: 8px;">${metric.value}</div>
-                            <div style="font-size: 14px; color: #666;">${metric.desc}</div>
-                        `;
-                        clinicalMetrics.appendChild(metricCard);
-                    });
-                    
-                    // 填充手术指标
-                    const operationMetrics = document.getElementById('operationMetrics');
-                    operationMetrics.innerHTML = '';
-                    procedureData.operationMetrics.forEach(metric => {
-                        const metricCard = document.createElement('div');
-                        metricCard.style = 'background: #f9f9f9; padding: 20px; border-radius: 12px; border-left: 4px solid #1E4A76; margin-bottom: 15px;';
-                        metricCard.innerHTML = `
-                            <div style="font-weight: bold; margin-bottom: 8px; color: #333;">${metric.name}</div>
-                            <div style="color: #1E4A76; font-size: 18px; margin-bottom: 8px;">${metric.value}</div>
-                            <div style="font-size: 14px; color: #666;">${metric.desc}</div>
-                        `;
-                        operationMetrics.appendChild(metricCard);
-                    });
-                    
-                    // 填充手术步骤
-                    const procedureSteps = document.getElementById('procedureSteps');
-                    procedureSteps.innerHTML = '';
-                    procedureData.steps.forEach(step => {
-                        const stepItem = document.createElement('div');
-                        stepItem.style = 'display: flex; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #E2E8F0;';
-                        stepItem.innerHTML = `
-                            <div style="width: 100px; font-weight: bold; color: #1E4A76; font-size: 16px;">${step.timestamp}s</div>
-                            <div style="flex: 1; font-size: 16px; color: #333;">${step.name}</div>
-                        `;
-                        procedureSteps.appendChild(stepItem);
-                    });
-                    
-                    // 设置视频源
-                    document.getElementById('traditionalVideo').src = getVideoUrl(procedureData.traditionalVideo);
-                    document.getElementById('roboticVideo').src = getVideoUrl(procedureData.roboticVideo);
-                    
-                    // 加载竞品数据
-                    loadCompetitors(procedureName);
-                    
-                    // 隐藏主界面，显示术式详情界面
-                    document.getElementById('mainContent').style.display = 'none';
-                    document.getElementById('procedurePage').style.display = 'block';
+        // 从MCP服务器获取术式数据
+        async function fetchFromMCP(procedureName) {
+            try {
+                const response = await fetch('http://localhost:3003/mcp/tools/get_procedure_data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        procedureName: procedureName
+                    })
                 });
+                
+                if (!response.ok) {
+                    throw new Error(`MCP服务器响应错误: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    console.log('从MCP服务器成功获取数据:', procedureName);
+                    return result.data;
+                } else {
+                    throw new Error(result.error || 'MCP服务器返回数据无效');
+                }
+            } catch (error) {
+                console.warn('MCP服务器获取失败，将尝试API:', error.message);
+                throw error;
+            }
+        }
+        
+        // 从API获取术式数据
+        async function fetchFromAPI(procedureName) {
+            try {
+                const response = await fetch(`/api/procedures/${encodeURIComponent(procedureName)}`);
+                
+                if (!response.ok) {
+                    throw new Error(`API响应错误: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('从API成功获取数据:', procedureName);
+                return data;
+            } catch (error) {
+                console.warn('API获取失败，将使用默认数据:', error.message);
+                throw error;
+            }
+        }
+        
+        // 加载术式详情
+        async function loadProcedure(procedureName) {
+            let procedureData = null;
+            
+            try {
+                // 1. 首先尝试从MCP服务器获取数据
+                procedureData = await fetchFromMCP(procedureName);
+            } catch (mcpError) {
+                try {
+                    // 2. MCP失败，尝试从API获取数据
+                    procedureData = await fetchFromAPI(procedureName);
+                } catch (apiError) {
+                    // 3. API也失败，使用默认数据
+                    console.error('所有数据源都失败，使用默认数据:', apiError.message);
+                    procedureData = getDefaultProcedureData(procedureName);
+                }
+            }
+            
+            // 确保数据格式正确
+            procedureData = getDefaultProcedureData(procedureName, procedureData);
+            
+            // 更新页面标题
+            document.getElementById('procedureTitle').textContent = `${procedureData.name}手术详情信息`;
+            
+            // 填充术式信息
+            document.getElementById('procedureName').textContent = procedureData.name;
+            document.getElementById('procedureDept').textContent = `科室: ${procedureData.dept}`;
+            document.getElementById('procedureOrgan').textContent = `器官: ${procedureData.organ}`;
+            document.getElementById('procedureIndications').textContent = procedureData.indications;
+            document.getElementById('procedureContraindications').textContent = procedureData.contraindications;
+            document.getElementById('guidelineDiff').textContent = procedureData.guidelineDiff;
+            
+            // 填充临床指标
+            const clinicalMetrics = document.getElementById('clinicalMetrics');
+            clinicalMetrics.innerHTML = '';
+            if (procedureData.clinicalMetrics && Array.isArray(procedureData.clinicalMetrics)) {
+                procedureData.clinicalMetrics.forEach(metric => {
+                    const metricCard = document.createElement('div');
+                    metricCard.style = 'background: #f9f9f9; padding: 20px; border-radius: 12px; border-left: 4px solid #1E4A76; margin-bottom: 15px;';
+                    metricCard.innerHTML = `
+                        <div style="font-weight: bold; margin-bottom: 8px; color: #333;">${metric.name}</div>
+                        <div style="color: #1E4A76; font-size: 18px; margin-bottom: 8px;">${metric.value}</div>
+                        <div style="font-size: 14px; color: #666;">${metric.desc}</div>
+                    `;
+                    clinicalMetrics.appendChild(metricCard);
+                });
+            }
+            
+            // 填充手术指标
+            const operationMetrics = document.getElementById('operationMetrics');
+            operationMetrics.innerHTML = '';
+            if (procedureData.operationMetrics && Array.isArray(procedureData.operationMetrics)) {
+                procedureData.operationMetrics.forEach(metric => {
+                    const metricCard = document.createElement('div');
+                    metricCard.style = 'background: #f9f9f9; padding: 20px; border-radius: 12px; border-left: 4px solid #1E4A76; margin-bottom: 15px;';
+                    metricCard.innerHTML = `
+                        <div style="font-weight: bold; margin-bottom: 8px; color: #333;">${metric.name}</div>
+                        <div style="color: #1E4A76; font-size: 18px; margin-bottom: 8px;">${metric.value}</div>
+                        <div style="font-size: 14px; color: #666;">${metric.desc}</div>
+                    `;
+                    operationMetrics.appendChild(metricCard);
+                });
+            }
+            
+            // 填充手术步骤
+            const procedureSteps = document.getElementById('procedureSteps');
+            procedureSteps.innerHTML = '';
+            if (procedureData.steps && Array.isArray(procedureData.steps)) {
+                procedureData.steps.forEach(step => {
+                    const stepItem = document.createElement('div');
+                    stepItem.style = 'display: flex; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #E2E8F0;';
+                    stepItem.innerHTML = `
+                        <div style="width: 100px; font-weight: bold; color: #1E4A76; font-size: 16px;">${step.timestamp}s</div>
+                        <div style="flex: 1; font-size: 16px; color: #333;">${step.name}</div>
+                    `;
+                    procedureSteps.appendChild(stepItem);
+                });
+            }
+            
+            // 设置视频源
+            document.getElementById('traditionalVideo').src = getVideoUrl(procedureName, 'traditional');
+            document.getElementById('roboticVideo').src = getVideoUrl(procedureName, 'robotic');
+            
+            // 加载竞品数据
+            loadCompetitors(procedureName);
+            
+            // 隐藏主界面，显示术式详情界面
+            document.getElementById('mainContent').style.display = 'none';
+            document.getElementById('procedurePage').style.display = 'block';
         }
         
         // 获取默认术式数据
         function getDefaultProcedureData(procedureName, data = {}) {
+            // 全膝关节置换术默认数据
+            if (procedureName === '全膝关节置换术') {
+                return {
+                    name: data.name || '全膝关节置换术',
+                    dept: data.dept || '骨科',
+                    organ: data.organ || '膝关节',
+                    indications: data.indications || '1. 重度骨关节炎；2. 类风湿关节炎晚期；3. 创伤性关节炎；4. 膝关节畸形。',
+                    contraindications: data.contraindications || '1. 活动性感染；2. 伸膝装置功能丧失；3. 严重骨质疏松；4. 神经源性关节病。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统手术：依赖医生经验，截骨精度受人为因素影响；2. 机器人辅助手术：通过3D规划和实时导航，提高截骨精度和力线重建准确性。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '下肢力线偏差', value: '≤3°', desc: '髋-膝-踝角与术前规划偏差' },
+                        { name: '截骨深度偏差', value: '≤1mm', desc: '股骨远端/胫骨近端截骨厚度与计划偏差' },
+                        { name: '5年假体生存率', value: '≥95%', desc: '翻修率≤5%' },
+                        { name: '术后疼痛评分', value: '2-3分', desc: 'VAS评分，满分10分' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '90-120分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '100-300ml', desc: '估计失血量' },
+                        { name: '住院时间', value: '3-7天', desc: '术后平均住院时间' },
+                        { name: '恢复时间', value: '3-6个月', desc: '完全恢复正常活动' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '切口' },
+                        { timestamp: '900', name: '暴露膝关节' },
+                        { timestamp: '1200', name: '股骨远端截骨' },
+                        { timestamp: '1800', name: '胫骨近端截骨' },
+                        { timestamp: '2400', name: '试模' },
+                        { timestamp: '3000', name: '假体植入' },
+                        { timestamp: '3600', name: '缝合' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 全髋关节置换术默认数据
+            else if (procedureName === '全髋关节置换术') {
+                return {
+                    name: data.name || '全髋关节置换术',
+                    dept: data.dept || '骨科',
+                    organ: data.organ || '髋关节',
+                    indications: data.indications || '1. 重度髋关节骨关节炎；2. 股骨头缺血性坏死；3. 髋关节发育不良；4. 类风湿关节炎；5. 创伤性关节炎。',
+                    contraindications: data.contraindications || '1. 活动性感染；2. 严重骨质疏松；3. 神经源性关节病；4. 严重心肺功能不全。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统手术：依赖医生经验，髋臼假体位置和角度受人为因素影响；2. 机器人辅助手术：通过3D规划和实时导航，提高髋臼假体放置精度和下肢长度恢复准确性。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '髋臼假体位置', value: '±5°', desc: '外展角和前倾角与术前规划偏差' },
+                        { name: '下肢长度差异', value: '≤5mm', desc: '术后双侧下肢长度差异' },
+                        { name: '5年假体生存率', value: '≥95%', desc: '翻修率≤5%' },
+                        { name: '术后疼痛评分', value: '2-3分', desc: 'VAS评分，满分10分' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '90-120分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '300-500ml', desc: '估计失血量' },
+                        { name: '住院时间', value: '3-7天', desc: '术后平均住院时间' },
+                        { name: '恢复时间', value: '3-6个月', desc: '完全恢复正常活动' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '切口' },
+                        { timestamp: '900', name: '暴露髋关节' },
+                        { timestamp: '1200', name: '股骨颈截骨' },
+                        { timestamp: '1800', name: '髋臼准备' },
+                        { timestamp: '2400', name: '股骨准备' },
+                        { timestamp: '3000', name: '假体植入' },
+                        { timestamp: '3600', name: '缝合' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 腹腔镜胆囊切除术默认数据
+            else if (procedureName === '腹腔镜胆囊切除术') {
+                return {
+                    name: data.name || '腹腔镜胆囊切除术',
+                    dept: data.dept || '普外科',
+                    organ: data.organ || '胆囊',
+                    indications: data.indications || '1. 症状性胆囊结石；2. 胆囊息肉≥10mm；3. 胆囊炎反复发作；4. 胆囊腺肌症。',
+                    contraindications: data.contraindications || '1. 严重凝血功能障碍；2. 急性化脓性胆囊炎穿孔；3. 腹腔广泛粘连；4. 严重心肺功能不全。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统开腹手术：适用于复杂胆囊病变，手术视野清晰；2. 腹腔镜手术：创伤小，恢复快，已成为金标准；3. 机器人辅助手术：操作更精准，尤其适用于复杂病例。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '手术成功率', value: '99%', desc: '成功切除胆囊' },
+                        { name: '并发症率', value: '1-3%', desc: '包括胆漏、出血等' },
+                        { name: '住院时间', value: '1-3天', desc: '术后平均住院时间' },
+                        { name: '恢复时间', value: '1-2周', desc: '完全恢复正常活动' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '30-60分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '5-50ml', desc: '估计失血量' },
+                        { name: '切口数量', value: '3-4个', desc: '每个切口0.5-1.5cm' },
+                        { name: '中转开腹率', value: '1-2%', desc: '因解剖困难或并发症' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '建立气腹' },
+                        { timestamp: '600', name: '穿刺置管' },
+                        { timestamp: '900', name: '探查腹腔' },
+                        { timestamp: '1200', name: '解剖胆囊三角' },
+                        { timestamp: '1800', name: '离断胆囊管和动脉' },
+                        { timestamp: '2400', name: '剥离胆囊' },
+                        { timestamp: '3000', name: '取出胆囊' },
+                        { timestamp: '3300', name: '关闭切口' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 脊柱融合术默认数据
+            else if (procedureName === '脊柱融合术') {
+                return {
+                    name: data.name || '脊柱融合术',
+                    dept: data.dept || '骨科',
+                    organ: data.organ || '脊柱',
+                    indications: data.indications || '1. 腰椎间盘突出症；2. 腰椎滑脱；3. 脊柱侧弯；4. 脊柱骨折；5. 脊柱肿瘤。',
+                    contraindications: data.contraindications || '1. 严重骨质疏松；2. 活动性感染；3. 严重心肺功能不全；4. 凝血功能障碍。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统开放手术：视野清晰，适用于复杂病变；2. 微创手术：创伤小，恢复快；3. 机器人辅助手术：提高置钉精度，减少辐射暴露。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '置钉准确率', value: '98-99%', desc: '螺钉位置优良率' },
+                        { name: '融合率', value: '90-95%', desc: '术后1年融合成功率' },
+                        { name: '并发症率', value: '5-10%', desc: '包括感染、神经损伤等' },
+                        { name: '住院时间', value: '5-7天', desc: '术后平均住院时间' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '120-240分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '200-500ml', desc: '估计失血量' },
+                        { name: '辐射暴露', value: '减少70%', desc: '机器人辅助相比传统透视' },
+                        { name: '恢复时间', value: '3-6个月', desc: '完全恢复正常活动' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '切口' },
+                        { timestamp: '900', name: '暴露脊柱' },
+                        { timestamp: '1200', name: '椎弓根置钉' },
+                        { timestamp: '1800', name: '椎体间融合' },
+                        { timestamp: '2400', name: '安装内固定' },
+                        { timestamp: '3000', name: '缝合' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 前列腺癌根治术默认数据
+            else if (procedureName === '前列腺癌根治术') {
+                return {
+                    name: data.name || '前列腺癌根治术',
+                    dept: data.dept || '泌尿外科',
+                    organ: data.organ || '前列腺',
+                    indications: data.indications || '1. 局限性前列腺癌；2. 预期寿命>10年；3. 无远处转移；4. 身体状况能耐受手术。',
+                    contraindications: data.contraindications || '1. 远处转移；2. 严重心肺功能不全；3. 凝血功能障碍；4. 晚期前列腺癌。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统开放手术：手术视野清晰，适用于复杂病例；2. 腹腔镜手术：创伤小，恢复快；3. 机器人辅助手术：操作更精准，尿控和性功能保留率更高。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '切缘阳性率', value: '5-10%', desc: '手术切缘肿瘤残留率' },
+                        { name: '尿失禁率', value: '5-15%', desc: '术后1年尿失禁发生率' },
+                        { name: '勃起功能障碍率', value: '20-30%', desc: '术后1年勃起功能障碍发生率' },
+                        { name: '5年生存率', value: '85-95%', desc: '局限性前列腺癌术后生存率' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '120-180分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '100-300ml', desc: '估计失血量' },
+                        { name: '住院时间', value: '1-3天', desc: '术后平均住院时间' },
+                        { name: '恢复时间', value: '4-6周', desc: '完全恢复正常活动' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '建立气腹' },
+                        { timestamp: '900', name: '穿刺置管' },
+                        { timestamp: '1200', name: '游离前列腺' },
+                        { timestamp: '1800', name: '离断输精管和精囊' },
+                        { timestamp: '2400', name: '切除前列腺' },
+                        { timestamp: '3000', name: '膀胱尿道吻合' },
+                        { timestamp: '3600', name: '关闭切口' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 肺叶切除术默认数据
+            else if (procedureName === '肺叶切除术') {
+                return {
+                    name: data.name || '肺叶切除术',
+                    dept: data.dept || '胸外科',
+                    organ: data.organ || '肺部',
+                    indications: data.indications || '1. 早期肺癌；2. 肺部良性肿瘤；3. 肺脓肿；4. 支气管扩张。',
+                    contraindications: data.contraindications || '1. 严重心肺功能不全；2. 远处转移；3. 凝血功能障碍；4. 全身状况差。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统开胸手术：适用于复杂肺部病变，手术视野清晰；2. 胸腔镜手术：创伤小，恢复快；3. 机器人辅助手术：操作更精准，尤其适用于复杂病例。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '手术成功率', value: '95-99%', desc: '成功切除病变肺叶' },
+                        { name: '并发症率', value: '10-15%', desc: '包括肺炎、肺不张等' },
+                        { name: '住院时间', value: '5-7天', desc: '术后平均住院时间' },
+                        { name: '5年生存率', value: '60-80%', desc: '早期肺癌术后生存率' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '120-180分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '100-300ml', desc: '估计失血量' },
+                        { name: '切口数量', value: '3-4个', desc: '每个切口0.5-2cm' },
+                        { name: '恢复时间', value: '4-6周', desc: '完全恢复正常活动' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '建立气腹' },
+                        { timestamp: '900', name: '穿刺置管' },
+                        { timestamp: '1200', name: '探查胸腔' },
+                        { timestamp: '1800', name: '游离肺叶' },
+                        { timestamp: '2400', name: '离断肺动脉、肺静脉' },
+                        { timestamp: '3000', name: '离断支气管' },
+                        { timestamp: '3600', name: '切除肺叶' },
+                        { timestamp: '4200', name: '关闭切口' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 子宫切除术默认数据
+            else if (procedureName === '子宫切除术') {
+                return {
+                    name: data.name || '子宫切除术',
+                    dept: data.dept || '妇产科',
+                    organ: data.organ || '子宫',
+                    indications: data.indications || '1. 子宫肌瘤；2. 子宫内膜癌；3. 子宫脱垂；4. 异常子宫出血。',
+                    contraindications: data.contraindications || '1. 严重凝血功能障碍；2. 急性感染；3. 严重心肺功能不全；4. 全身状况差。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统开腹手术：适用于复杂病例，手术视野清晰；2. 腹腔镜手术：创伤小，恢复快；3. 机器人辅助手术：操作更精准，尤其适用于复杂病例。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '手术成功率', value: '99%', desc: '成功切除子宫' },
+                        { name: '并发症率', value: '5-10%', desc: '包括感染、出血等' },
+                        { name: '住院时间', value: '2-4天', desc: '术后平均住院时间' },
+                        { name: '恢复时间', value: '4-6周', desc: '完全恢复正常活动' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '90-150分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '100-300ml', desc: '估计失血量' },
+                        { name: '切口数量', value: '3-4个', desc: '每个切口0.5-1.5cm' },
+                        { name: '中转开腹率', value: '1-2%', desc: '因解剖困难或并发症' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '建立气腹' },
+                        { timestamp: '900', name: '穿刺置管' },
+                        { timestamp: '1200', name: '探查盆腔' },
+                        { timestamp: '1800', name: '游离子宫' },
+                        { timestamp: '2400', name: '离断子宫血管' },
+                        { timestamp: '3000', name: '切除子宫' },
+                        { timestamp: '3600', name: '关闭切口' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 冠状动脉搭桥术默认数据
+            else if (procedureName === '冠状动脉搭桥术') {
+                return {
+                    name: data.name || '冠状动脉搭桥术',
+                    dept: data.dept || '心脏外科',
+                    organ: data.organ || '冠状动脉',
+                    indications: data.indications || '1. 多支血管病变；2. 左主干病变；3. 糖尿病患者；4. 药物治疗无效的心绞痛。',
+                    contraindications: data.contraindications || '1. 严重心功能不全；2. 全身情况差；3. 凝血功能障碍；4. 严重肝肾功能不全。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统体外循环搭桥：适用于大多数病例，手术视野清晰；2. 非体外循环搭桥：创伤小，恢复快；3. 机器人辅助搭桥：创伤更小，恢复更快，尤其适用于前降支病变。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '手术成功率', value: '95-98%', desc: '成功完成搭桥' },
+                        { name: '死亡率', value: '1-3%', desc: '手术死亡率' },
+                        { name: '并发症率', value: '10-15%', desc: '包括感染、出血等' },
+                        { name: '5年通畅率', value: '80-85%', desc: '桥血管5年通畅率' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '240-360分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '300-500ml', desc: '估计失血量' },
+                        { name: '住院时间', value: '7-10天', desc: '术后平均住院时间' },
+                        { name: '恢复时间', value: '6-12周', desc: '完全恢复正常活动' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '游离桥血管' },
+                        { timestamp: '1200', name: '建立体外循环' },
+                        { timestamp: '1800', name: '心脏停跳' },
+                        { timestamp: '2400', name: '吻合桥血管' },
+                        { timestamp: '3000', name: '心脏复跳' },
+                        { timestamp: '3600', name: '脱离体外循环' },
+                        { timestamp: '4200', name: '关闭切口' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 腹主动脉瘤切除术默认数据
+            else if (procedureName === '腹主动脉瘤切除术') {
+                return {
+                    name: data.name || '腹主动脉瘤切除术',
+                    dept: data.dept || '血管外科',
+                    organ: data.organ || '腹主动脉',
+                    indications: data.indications || '1. 腹主动脉瘤直径≥5.5cm；2. 瘤体增长速度≥0.5cm/年；3. 瘤体破裂或有破裂风险；4. 瘤体引起症状。',
+                    contraindications: data.contraindications || '1. 严重心肺功能不全；2. 凝血功能障碍；3. 全身情况差；4. 无法耐受手术。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统开放手术：适用于复杂动脉瘤，手术视野清晰；2. 腔内修复术：创伤小，恢复快，已成为首选；3. 机器人辅助手术：操作更精准，尤其适用于复杂解剖病例。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '手术成功率', value: '90-95%', desc: '成功修复动脉瘤' },
+                        { name: '死亡率', value: '2-5%', desc: '手术死亡率' },
+                        { name: '并发症率', value: '10-15%', desc: '包括感染、出血等' },
+                        { name: '5年生存率', value: '70-80%', desc: '术后5年生存率' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '180-240分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '200-500ml', desc: '估计失血量' },
+                        { name: '住院时间', value: '5-7天', desc: '术后平均住院时间' },
+                        { name: '恢复时间', value: '4-6周', desc: '完全恢复正常活动' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '切口' },
+                        { timestamp: '900', name: '暴露腹主动脉' },
+                        { timestamp: '1200', name: '阻断主动脉' },
+                        { timestamp: '1800', name: '切除动脉瘤' },
+                        { timestamp: '2400', name: '植入人工血管' },
+                        { timestamp: '3000', name: '吻合血管' },
+                        { timestamp: '3600', name: '关闭切口' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 胃癌根治术默认数据
+            else if (procedureName === '胃癌根治术') {
+                return {
+                    name: data.name || '胃癌根治术',
+                    dept: data.dept || '普外科',
+                    organ: data.organ || '胃',
+                    indications: data.indications || '1. 早期胃癌；2. 进展期胃癌；3. 无远处转移；4. 身体状况能耐受手术。',
+                    contraindications: data.contraindications || '1. 远处转移；2. 严重心肺功能不全；3. 凝血功能障碍；4. 全身状况差。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统开放手术：适用于复杂病例，手术视野清晰；2. 腹腔镜手术：创伤小，恢复快；3. 机器人辅助手术：操作更精准，淋巴结清扫更彻底。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '手术切除率', value: '90-95%', desc: 'R0切除率' },
+                        { name: '淋巴结清扫数量', value: '≥15枚', desc: '平均清扫淋巴结数' },
+                        { name: '并发症率', value: '15-20%', desc: '包括吻合口瘘、感染等' },
+                        { name: '5年生存率', value: '40-60%', desc: '进展期胃癌术后生存率' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '180-240分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '100-300ml', desc: '估计失血量' },
+                        { name: '住院时间', value: '7-10天', desc: '术后平均住院时间' },
+                        { name: '恢复时间', value: '4-6周', desc: '完全恢复正常活动' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '建立气腹' },
+                        { timestamp: '900', name: '穿刺置管' },
+                        { timestamp: '1200', name: '探查腹腔' },
+                        { timestamp: '1800', name: '游离胃' },
+                        { timestamp: '2400', name: '清扫淋巴结' },
+                        { timestamp: '3000', name: '切除胃' },
+                        { timestamp: '3600', name: '胃肠吻合' },
+                        { timestamp: '4200', name: '关闭切口' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 肾部分切除术默认数据
+            else if (procedureName === '肾部分切除术') {
+                return {
+                    name: data.name || '肾部分切除术',
+                    dept: data.dept || '泌尿外科',
+                    organ: data.organ || '肾脏',
+                    indications: data.indications || '1. 肾肿瘤直径≤4cm；2. 肿瘤位于肾表面；3. 孤立肾肿瘤；4. 双侧肾肿瘤。',
+                    contraindications: data.contraindications || '1. 肿瘤侵犯肾盂；2. 肿瘤侵犯肾静脉；3. 凝血功能障碍；4. 严重心肺功能不全。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统开放手术：适用于复杂病例，手术视野清晰；2. 腹腔镜手术：创伤小，恢复快；3. 机器人辅助手术：操作更精准，肾功能保留率更高。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '肿瘤切除率', value: '95-99%', desc: 'R0切除率' },
+                        { name: '肾功能保留率', value: '≥80%', desc: '术后肾功能保留' },
+                        { name: '并发症率', value: '10-15%', desc: '包括出血、尿漏等' },
+                        { name: '复发率', value: '5-10%', desc: '术后肿瘤复发率' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '90-150分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '100-200ml', desc: '估计失血量' },
+                        { name: '热缺血时间', value: '20-30分钟', desc: '肾脏缺血时间' },
+                        { name: '住院时间', value: '3-5天', desc: '术后平均住院时间' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '建立气腹' },
+                        { timestamp: '900', name: '穿刺置管' },
+                        { timestamp: '1200', name: '暴露肾脏' },
+                        { timestamp: '1800', name: '阻断肾动脉' },
+                        { timestamp: '2400', name: '切除肿瘤' },
+                        { timestamp: '3000', name: '缝合肾脏' },
+                        { timestamp: '3600', name: '恢复肾动脉血流' },
+                        { timestamp: '4200', name: '关闭切口' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 巨结肠根治术默认数据
+            else if (procedureName === '巨结肠根治术') {
+                return {
+                    name: data.name || '巨结肠根治术',
+                    dept: data.dept || '小儿外科',
+                    organ: data.organ || '结肠',
+                    indications: data.indications || '1. 先天性巨结肠；2. 肠神经元发育不良；3. 巨结肠类缘病；4. 保守治疗无效的便秘。',
+                    contraindications: data.contraindications || '1. 严重营养不良；2. 感染性肠炎；3. 凝血功能障碍；4. 全身状况差。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统开放手术：适用于复杂病例，手术视野清晰；2. 腹腔镜手术：创伤小，恢复快；3. 机器人辅助手术：操作更精准，尤其适用于小儿患者。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '手术成功率', value: '90-95%', desc: '成功切除病变肠段' },
+                        { name: '并发症率', value: '15-20%', desc: '包括吻合口瘘、感染等' },
+                        { name: '排便功能恢复', value: '80-90%', desc: '术后正常排便功能' },
+                        { name: '住院时间', value: '7-10天', desc: '术后平均住院时间' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '180-240分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '50-100ml', desc: '估计失血量' },
+                        { name: '切口数量', value: '3-4个', desc: '每个切口0.5-1cm' },
+                        { name: '恢复时间', value: '4-6周', desc: '完全恢复正常活动' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '建立气腹' },
+                        { timestamp: '900', name: '穿刺置管' },
+                        { timestamp: '1200', name: '探查腹腔' },
+                        { timestamp: '1800', name: '游离结肠' },
+                        { timestamp: '2400', name: '切除病变肠段' },
+                        { timestamp: '3000', name: '肠吻合' },
+                        { timestamp: '3600', name: '关闭切口' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 乳房重建术默认数据
+            else if (procedureName === '乳房重建术') {
+                return {
+                    name: data.name || '乳房重建术',
+                    dept: data.dept || '整形外科',
+                    organ: data.organ || '乳房',
+                    indications: data.indications || '1. 乳腺癌术后乳房缺失；2. 先天性乳房发育不良；3. 乳房不对称；4. 乳房外伤性缺损。',
+                    contraindications: data.contraindications || '1. 活动性感染；2. 全身状况差；3. 凝血功能障碍；4. 乳腺癌复发风险高。',
+                    guidelineDiff: data.guidelineDiff || '1. 假体植入：手术时间短，恢复快；2. 自体组织重建：效果更自然，无需假体；3. 机器人辅助重建：操作更精准，美学效果更好。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '手术成功率', value: '90-95%', desc: '成功重建乳房' },
+                        { name: '并发症率', value: '15-20%', desc: '包括感染、皮瓣坏死等' },
+                        { name: '患者满意度', value: '85-90%', desc: '术后乳房外观满意度' },
+                        { name: '住院时间', value: '3-5天', desc: '术后平均住院时间' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '240-360分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '100-300ml', desc: '估计失血量' },
+                        { name: '恢复时间', value: '4-6周', desc: '完全恢复正常活动' },
+                        { name: '假体生存率', value: '80-85%', desc: '10年假体生存率' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '切口设计' },
+                        { timestamp: '900', name: '游离皮瓣' },
+                        { timestamp: '1800', name: '制备乳房假体' },
+                        { timestamp: '2400', name: '植入假体' },
+                        { timestamp: '3000', name: '塑形' },
+                        { timestamp: '3600', name: '缝合切口' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
             // 颅内肿瘤切除术默认数据
-            if (procedureName === '颅内肿瘤切除术') {
+            else if (procedureName === '颅内肿瘤切除术') {
                 return {
                     name: data.name || '颅内肿瘤切除术',
                     dept: data.dept || '神经外科',
@@ -1216,17 +1915,724 @@
                 };
             }
             
+            // 根据术式类型返回相应的默认数据
+            // 膝关节相关术式
+            if (procedureName.includes('膝关节')) {
+                return {
+                    name: data.name || procedureName,
+                    dept: data.dept || '骨科',
+                    organ: data.organ || '膝关节',
+                    indications: data.indications || '1. 膝关节疼痛；2. 膝关节功能障碍；3. 膝关节畸形；4. 膝关节损伤。',
+                    contraindications: data.contraindications || '1. 活动性感染；2. 严重骨质疏松；3. 神经源性关节病；4. 严重心肺功能不全。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统手术：依赖医生经验，精度受人为因素影响；2. 机器人辅助手术：通过3D规划和实时导航，提高手术精度。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '手术成功率', value: '95-99%', desc: '成功完成手术' },
+                        { name: '并发症率', value: '1-5%', desc: '包括感染、出血等' },
+                        { name: '术后疼痛评分', value: '2-3分', desc: 'VAS评分，满分10分' },
+                        { name: '恢复时间', value: '4-8周', desc: '完全恢复正常活动' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '60-120分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '50-300ml', desc: '估计失血量' },
+                        { name: '住院时间', value: '2-5天', desc: '术后平均住院时间' },
+                        { name: '术后活动度', value: '90-120°', desc: '膝关节活动范围' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '切口' },
+                        { timestamp: '900', name: '暴露膝关节' },
+                        { timestamp: '1200', name: '手术操作' },
+                        { timestamp: '1800', name: '缝合' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 脊柱相关术式
+            else if (procedureName.includes('脊柱') || procedureName.includes('腰椎') || procedureName.includes('颈椎')) {
+                return {
+                    name: data.name || procedureName,
+                    dept: data.dept || '骨科',
+                    organ: data.organ || '脊柱',
+                    indications: data.indications || '1. 脊柱疼痛；2. 神经压迫症状；3. 脊柱畸形；4. 脊柱损伤。',
+                    contraindications: data.contraindications || '1. 严重骨质疏松；2. 活动性感染；3. 凝血功能障碍；4. 严重心肺功能不全。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统手术：视野清晰，适用于复杂病变；2. 微创手术：创伤小，恢复快；3. 机器人辅助手术：提高置钉精度，减少辐射暴露。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '置钉准确率', value: '98-99%', desc: '螺钉位置优良率' },
+                        { name: '融合率', value: '90-95%', desc: '术后1年融合成功率' },
+                        { name: '并发症率', value: '5-10%', desc: '包括感染、神经损伤等' },
+                        { name: '住院时间', value: '5-7天', desc: '术后平均住院时间' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '120-240分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '200-500ml', desc: '估计失血量' },
+                        { name: '辐射暴露', value: '减少70%', desc: '机器人辅助相比传统透视' },
+                        { name: '恢复时间', value: '3-6个月', desc: '完全恢复正常活动' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '切口' },
+                        { timestamp: '900', name: '暴露脊柱' },
+                        { timestamp: '1200', name: '手术操作' },
+                        { timestamp: '1800', name: '缝合' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 髋关节相关术式
+            else if (procedureName.includes('髋关节')) {
+                return {
+                    name: data.name || procedureName,
+                    dept: data.dept || '骨科',
+                    organ: data.organ || '髋关节',
+                    indications: data.indications || '1. 髋关节疼痛；2. 髋关节功能障碍；3. 髋关节畸形；4. 髋关节损伤。',
+                    contraindications: data.contraindications || '1. 活动性感染；2. 严重骨质疏松；3. 神经源性关节病；4. 严重心肺功能不全。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统手术：依赖医生经验，髋臼假体位置和角度受人为因素影响；2. 机器人辅助手术：通过3D规划和实时导航，提高髋臼假体放置精度和下肢长度恢复准确性。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '髋臼假体位置', value: '±5°', desc: '外展角和前倾角与术前规划偏差' },
+                        { name: '下肢长度差异', value: '≤5mm', desc: '术后双侧下肢长度差异' },
+                        { name: '5年假体生存率', value: '≥95%', desc: '翻修率≤5%' },
+                        { name: '术后疼痛评分', value: '2-3分', desc: 'VAS评分，满分10分' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '90-120分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '300-500ml', desc: '估计失血量' },
+                        { name: '住院时间', value: '3-7天', desc: '术后平均住院时间' },
+                        { name: '恢复时间', value: '3-6个月', desc: '完全恢复正常活动' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '切口' },
+                        { timestamp: '900', name: '暴露髋关节' },
+                        { timestamp: '1200', name: '手术操作' },
+                        { timestamp: '1800', name: '缝合' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 骨折相关术式
+            else if (procedureName.includes('骨折')) {
+                return {
+                    name: data.name || procedureName,
+                    dept: data.dept || '骨科',
+                    organ: data.organ || '骨骼',
+                    indications: data.indications || '1. 骨折移位明显；2. 骨折不稳定；3. 开放性骨折；4. 关节内骨折。',
+                    contraindications: data.contraindications || '1. 严重骨质疏松；2. 活动性感染；3. 凝血功能障碍；4. 全身状况差。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统手术：视野清晰，适用于复杂骨折；2. 微创手术：创伤小，恢复快；3. 机器人辅助手术：提高复位和固定精度。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '骨折愈合率', value: '95-99%', desc: '术后骨折愈合成功率' },
+                        { name: '并发症率', value: '5-10%', desc: '包括感染、骨不连等' },
+                        { name: '功能恢复率', value: '85-95%', desc: '术后功能恢复良好率' },
+                        { name: '住院时间', value: '3-10天', desc: '术后平均住院时间' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '60-180分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '100-500ml', desc: '估计失血量' },
+                        { name: '切口长度', value: '5-15cm', desc: '手术切口长度' },
+                        { name: '恢复时间', value: '2-6个月', desc: '完全恢复正常活动' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '切口' },
+                        { timestamp: '900', name: '骨折复位' },
+                        { timestamp: '1200', name: '内固定' },
+                        { timestamp: '1800', name: '缝合' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 前列腺相关术式
+            else if (procedureName.includes('前列腺')) {
+                return {
+                    name: data.name || procedureName,
+                    dept: data.dept || '泌尿外科',
+                    organ: data.organ || '前列腺',
+                    indications: data.indications || '1. 前列腺增生；2. 前列腺癌；3. 前列腺囊肿；4. 前列腺脓肿。',
+                    contraindications: data.contraindications || '1. 严重心肺功能不全；2. 凝血功能障碍；3. 尿道狭窄；4. 全身状况差。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统手术：手术视野清晰，适用于复杂病例；2. 微创手术：创伤小，恢复快；3. 机器人辅助手术：操作更精准，尿控和性功能保留率更高。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '手术成功率', value: '95-99%', desc: '成功完成手术' },
+                        { name: '并发症率', value: '5-15%', desc: '包括出血、感染等' },
+                        { name: '尿失禁率', value: '5-15%', desc: '术后尿失禁发生率' },
+                        { name: '恢复时间', value: '4-6周', desc: '完全恢复正常活动' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '60-180分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '50-300ml', desc: '估计失血量' },
+                        { name: '住院时间', value: '1-3天', desc: '术后平均住院时间' },
+                        { name: '导管留置时间', value: '3-7天', desc: '术后导尿管留置时间' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '手术操作' },
+                        { timestamp: '1200', name: '止血' },
+                        { timestamp: '1800', name: '缝合' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 肾脏相关术式
+            else if (procedureName.includes('肾脏') || procedureName.includes('肾')) {
+                return {
+                    name: data.name || procedureName,
+                    dept: data.dept || '泌尿外科',
+                    organ: data.organ || '肾脏',
+                    indications: data.indications || '1. 肾肿瘤；2. 肾结石；3. 肾积水；4. 肾囊肿。',
+                    contraindications: data.contraindications || '1. 严重肾功能不全；2. 凝血功能障碍；3. 活动性感染；4. 全身状况差。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统开放手术：适用于复杂病例，手术视野清晰；2. 腹腔镜手术：创伤小，恢复快；3. 机器人辅助手术：操作更精准，肾功能保留率更高。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '手术成功率', value: '95-99%', desc: '成功完成手术' },
+                        { name: '并发症率', value: '5-15%', desc: '包括出血、感染等' },
+                        { name: '肾功能保留率', value: '≥80%', desc: '术后肾功能保留' },
+                        { name: '住院时间', value: '3-5天', desc: '术后平均住院时间' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '90-150分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '100-300ml', desc: '估计失血量' },
+                        { name: '热缺血时间', value: '20-30分钟', desc: '肾脏缺血时间' },
+                        { name: '恢复时间', value: '2-4周', desc: '完全恢复正常活动' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '建立气腹' },
+                        { timestamp: '900', name: '手术操作' },
+                        { timestamp: '1500', name: '止血' },
+                        { timestamp: '1800', name: '缝合' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 膀胱相关术式
+            else if (procedureName.includes('膀胱')) {
+                return {
+                    name: data.name || procedureName,
+                    dept: data.dept || '泌尿外科',
+                    organ: data.organ || '膀胱',
+                    indications: data.indications || '1. 膀胱癌；2. 膀胱结石；3. 膀胱憩室；4. 膀胱脱垂。',
+                    contraindications: data.contraindications || '1. 严重肾功能不全；2. 凝血功能障碍；3. 活动性感染；4. 全身状况差。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统开放手术：适用于复杂病例，手术视野清晰；2. 微创手术：创伤小，恢复快；3. 机器人辅助手术：操作更精准，肿瘤切除更彻底。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '手术成功率', value: '95-99%', desc: '成功完成手术' },
+                        { name: '并发症率', value: '5-15%', desc: '包括出血、感染等' },
+                        { name: '肿瘤复发率', value: '10-20%', desc: '术后肿瘤复发率' },
+                        { name: '住院时间', value: '3-7天', desc: '术后平均住院时间' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '90-180分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '100-300ml', desc: '估计失血量' },
+                        { name: '导管留置时间', value: '7-14天', desc: '术后导尿管留置时间' },
+                        { name: '恢复时间', value: '4-6周', desc: '完全恢复正常活动' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '手术操作' },
+                        { timestamp: '1200', name: '止血' },
+                        { timestamp: '1800', name: '缝合' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 输尿管相关术式
+            else if (procedureName.includes('输尿管')) {
+                return {
+                    name: data.name || procedureName,
+                    dept: data.dept || '泌尿外科',
+                    organ: data.organ || '输尿管',
+                    indications: data.indications || '1. 输尿管结石；2. 输尿管狭窄；3. 输尿管肿瘤；4. 输尿管损伤。',
+                    contraindications: data.contraindications || '1. 严重肾功能不全；2. 凝血功能障碍；3. 活动性感染；4. 全身状况差。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统开放手术：适用于复杂病例，手术视野清晰；2. 微创手术：创伤小，恢复快；3. 机器人辅助手术：操作更精准，成功率更高。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '手术成功率', value: '90-95%', desc: '成功完成手术' },
+                        { name: '并发症率', value: '5-10%', desc: '包括出血、感染等' },
+                        { name: '结石清除率', value: '85-95%', desc: '结石完全清除率' },
+                        { name: '住院时间', value: '1-3天', desc: '术后平均住院时间' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '60-120分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '50-200ml', desc: '估计失血量' },
+                        { name: '导管留置时间', value: '1-7天', desc: '术后导管留置时间' },
+                        { name: '恢复时间', value: '2-4周', desc: '完全恢复正常活动' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '手术操作' },
+                        { timestamp: '1200', name: '止血' },
+                        { timestamp: '1800', name: '缝合' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 子宫相关术式
+            else if (procedureName.includes('子宫')) {
+                return {
+                    name: data.name || procedureName,
+                    dept: data.dept || '妇产科',
+                    organ: data.organ || '子宫',
+                    indications: data.indications || '1. 子宫肌瘤；2. 子宫内膜癌；3. 子宫脱垂；4. 异常子宫出血。',
+                    contraindications: data.contraindications || '1. 严重凝血功能障碍；2. 急性感染；3. 严重心肺功能不全；4. 全身状况差。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统开腹手术：适用于复杂病例，手术视野清晰；2. 腹腔镜手术：创伤小，恢复快；3. 机器人辅助手术：操作更精准，尤其适用于复杂病例。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '手术成功率', value: '99%', desc: '成功完成手术' },
+                        { name: '并发症率', value: '5-10%', desc: '包括感染、出血等' },
+                        { name: '住院时间', value: '2-4天', desc: '术后平均住院时间' },
+                        { name: '恢复时间', value: '4-6周', desc: '完全恢复正常活动' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '90-150分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '100-300ml', desc: '估计失血量' },
+                        { name: '切口数量', value: '3-4个', desc: '每个切口0.5-1.5cm' },
+                        { name: '中转开腹率', value: '1-2%', desc: '因解剖困难或并发症' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '建立气腹' },
+                        { timestamp: '900', name: '手术操作' },
+                        { timestamp: '1500', name: '止血' },
+                        { timestamp: '1800', name: '缝合' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 卵巢相关术式
+            else if (procedureName.includes('卵巢')) {
+                return {
+                    name: data.name || procedureName,
+                    dept: data.dept || '妇产科',
+                    organ: data.organ || '卵巢',
+                    indications: data.indications || '1. 卵巢囊肿；2. 卵巢癌；3. 卵巢扭转；4. 卵巢巧克力囊肿。',
+                    contraindications: data.contraindications || '1. 严重凝血功能障碍；2. 急性感染；3. 严重心肺功能不全；4. 全身状况差。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统开腹手术：适用于复杂病例，手术视野清晰；2. 腹腔镜手术：创伤小，恢复快；3. 机器人辅助手术：操作更精准，尤其适用于复杂病例。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '手术成功率', value: '95-99%', desc: '成功完成手术' },
+                        { name: '并发症率', value: '5-10%', desc: '包括感染、出血等' },
+                        { name: '住院时间', value: '2-4天', desc: '术后平均住院时间' },
+                        { name: '恢复时间', value: '2-4周', desc: '完全恢复正常活动' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '60-120分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '50-200ml', desc: '估计失血量' },
+                        { name: '切口数量', value: '3-4个', desc: '每个切口0.5-1.5cm' },
+                        { name: '中转开腹率', value: '1-2%', desc: '因解剖困难或并发症' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '建立气腹' },
+                        { timestamp: '900', name: '手术操作' },
+                        { timestamp: '1500', name: '止血' },
+                        { timestamp: '1800', name: '缝合' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 宫颈相关术式
+            else if (procedureName.includes('宫颈')) {
+                return {
+                    name: data.name || procedureName,
+                    dept: data.dept || '妇产科',
+                    organ: data.organ || '宫颈',
+                    indications: data.indications || '1. 宫颈癌；2. 宫颈上皮内瘤变；3. 宫颈息肉；4. 宫颈糜烂。',
+                    contraindications: data.contraindications || '1. 严重凝血功能障碍；2. 急性感染；3. 严重心肺功能不全；4. 全身状况差。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统手术：适用于复杂病例，手术视野清晰；2. 微创手术：创伤小，恢复快；3. 机器人辅助手术：操作更精准，尤其适用于复杂病例。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '手术成功率', value: '95-99%', desc: '成功完成手术' },
+                        { name: '并发症率', value: '5-10%', desc: '包括感染、出血等' },
+                        { name: '住院时间', value: '1-3天', desc: '术后平均住院时间' },
+                        { name: '恢复时间', value: '2-4周', desc: '完全恢复正常活动' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '60-120分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '50-200ml', desc: '估计失血量' },
+                        { name: '切口数量', value: '3-4个', desc: '每个切口0.5-1.5cm' },
+                        { name: '中转开腹率', value: '1-2%', desc: '因解剖困难或并发症' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '手术操作' },
+                        { timestamp: '1200', name: '止血' },
+                        { timestamp: '1800', name: '缝合' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 输卵管相关术式
+            else if (procedureName.includes('输卵管')) {
+                return {
+                    name: data.name || procedureName,
+                    dept: data.dept || '妇产科',
+                    organ: data.organ || '输卵管',
+                    indications: data.indications || '1. 输卵管堵塞；2. 输卵管积水；3. 输卵管妊娠；4. 输卵管结扎/复通。',
+                    contraindications: data.contraindications || '1. 严重凝血功能障碍；2. 急性感染；3. 严重心肺功能不全；4. 全身状况差。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统开腹手术：适用于复杂病例，手术视野清晰；2. 腹腔镜手术：创伤小，恢复快；3. 机器人辅助手术：操作更精准，尤其适用于复杂病例。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '手术成功率', value: '90-95%', desc: '成功完成手术' },
+                        { name: '并发症率', value: '5-10%', desc: '包括感染、出血等' },
+                        { name: '住院时间', value: '1-3天', desc: '术后平均住院时间' },
+                        { name: '恢复时间', value: '2-4周', desc: '完全恢复正常活动' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '60-120分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '50-200ml', desc: '估计失血量' },
+                        { name: '切口数量', value: '3-4个', desc: '每个切口0.5-1.5cm' },
+                        { name: '中转开腹率', value: '1-2%', desc: '因解剖困难或并发症' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '建立气腹' },
+                        { timestamp: '900', name: '手术操作' },
+                        { timestamp: '1500', name: '止血' },
+                        { timestamp: '1800', name: '缝合' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 颅内相关术式
+            else if (procedureName.includes('颅内') || procedureName.includes('脑') || procedureName.includes('神经')) {
+                return {
+                    name: data.name || procedureName,
+                    dept: data.dept || '神经外科',
+                    organ: data.organ || '大脑',
+                    indications: data.indications || '1. 颅内肿瘤；2. 脑血管疾病；3. 癫痫；4. 帕金森病。',
+                    contraindications: data.contraindications || '1. 严重心、肺、肝、肾功能不全；2. 凝血功能障碍；3. 全身状况差；4. 手术风险极高。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统开颅手术：适用于大多数颅内病变，尤其是体积较大、位置较深的病变；2. 微创手术：适用于体积较小、位置表浅的病变；3. 机器人辅助手术：适用于精准定位要求高的病变。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '手术死亡率', value: '1-2%', desc: '根据病变类型和位置有所不同' },
+                        { name: '术后并发症率', value: '10-15%', desc: '包括出血、感染、神经功能障碍等' },
+                        { name: '病变全切率', value: '70-90%', desc: '取决于病变类型、位置和大小' },
+                        { name: '平均住院时间', value: '7-14天', desc: '根据手术复杂程度和患者恢复情况' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '3-8小时', desc: '取决于病变大小和位置' },
+                        { name: '出血量', value: '200-800ml', desc: '根据手术难度和病变血供情况' },
+                        { name: '麻醉时间', value: '4-10小时', desc: '包括术前准备和术后苏醒' },
+                        { name: '术后ICU停留时间', value: '1-3天', desc: '根据患者术后状态' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '头部消毒铺巾' },
+                        { timestamp: '600', name: '切开头皮' },
+                        { timestamp: '900', name: '颅骨钻孔' },
+                        { timestamp: '1200', name: '打开硬脑膜' },
+                        { timestamp: '1500', name: '暴露病变' },
+                        { timestamp: '2400', name: '切除病变' },
+                        { timestamp: '3000', name: '止血' },
+                        { timestamp: '3300', name: '关闭硬脑膜' },
+                        { timestamp: '3600', name: '颅骨复位' },
+                        { timestamp: '3900', name: '缝合头皮' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 肺部相关术式
+            else if (procedureName.includes('肺')) {
+                return {
+                    name: data.name || procedureName,
+                    dept: data.dept || '胸外科',
+                    organ: data.organ || '肺部',
+                    indications: data.indications || '1. 肺癌；2. 肺部良性肿瘤；3. 肺脓肿；4. 支气管扩张。',
+                    contraindications: data.contraindications || '1. 严重心肺功能不全；2. 远处转移；3. 凝血功能障碍；4. 全身状况差。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统开胸手术：适用于复杂肺部病变，手术视野清晰；2. 胸腔镜手术：创伤小，恢复快；3. 机器人辅助手术：操作更精准，尤其适用于复杂病例。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '手术成功率', value: '95-99%', desc: '成功切除病变' },
+                        { name: '并发症率', value: '10-15%', desc: '包括肺炎、肺不张等' },
+                        { name: '住院时间', value: '5-7天', desc: '术后平均住院时间' },
+                        { name: '5年生存率', value: '60-80%', desc: '早期肺癌术后生存率' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '120-180分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '100-300ml', desc: '估计失血量' },
+                        { name: '切口数量', value: '3-4个', desc: '每个切口0.5-2cm' },
+                        { name: '恢复时间', value: '4-6周', desc: '完全恢复正常活动' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '建立气腹' },
+                        { timestamp: '900', name: '穿刺置管' },
+                        { timestamp: '1200', name: '探查胸腔' },
+                        { timestamp: '1800', name: '手术操作' },
+                        { timestamp: '2400', name: '止血' },
+                        { timestamp: '3000', name: '关闭切口' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 食管相关术式
+            else if (procedureName.includes('食管')) {
+                return {
+                    name: data.name || procedureName,
+                    dept: data.dept || '胸外科',
+                    organ: data.organ || '食管',
+                    indications: data.indications || '1. 食管癌；2. 食管裂孔疝；3. 食管狭窄；4. 食管憩室。',
+                    contraindications: data.contraindications || '1. 严重心肺功能不全；2. 远处转移；3. 凝血功能障碍；4. 全身状况差。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统开胸手术：适用于复杂食管病变，手术视野清晰；2. 微创手术：创伤小，恢复快；3. 机器人辅助手术：操作更精准，尤其适用于复杂病例。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '手术成功率', value: '90-95%', desc: '成功完成手术' },
+                        { name: '并发症率', value: '15-20%', desc: '包括吻合口瘘、感染等' },
+                        { name: '住院时间', value: '7-14天', desc: '术后平均住院时间' },
+                        { name: '5年生存率', value: '30-60%', desc: '食管癌术后生存率' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '240-360分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '200-500ml', desc: '估计失血量' },
+                        { name: '切口数量', value: '3-4个', desc: '每个切口0.5-2cm' },
+                        { name: '恢复时间', value: '6-12周', desc: '完全恢复正常活动' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '手术操作' },
+                        { timestamp: '1800', name: '吻合' },
+                        { timestamp: '2400', name: '止血' },
+                        { timestamp: '3000', name: '关闭切口' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 纵隔相关术式
+            else if (procedureName.includes('纵隔')) {
+                return {
+                    name: data.name || procedureName,
+                    dept: data.dept || '胸外科',
+                    organ: data.organ || '纵隔',
+                    indications: data.indications || '1. 纵隔肿瘤；2. 胸腺增生；3. 纵隔囊肿；4. 纵隔炎。',
+                    contraindications: data.contraindications || '1. 严重心肺功能不全；2. 远处转移；3. 凝血功能障碍；4. 全身状况差。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统开胸手术：适用于复杂纵隔病变，手术视野清晰；2. 微创手术：创伤小，恢复快；3. 机器人辅助手术：操作更精准，尤其适用于复杂病例。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '手术成功率', value: '90-95%', desc: '成功完成手术' },
+                        { name: '并发症率', value: '10-15%', desc: '包括感染、出血等' },
+                        { name: '住院时间', value: '5-10天', desc: '术后平均住院时间' },
+                        { name: '恢复时间', value: '4-6周', desc: '完全恢复正常活动' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '120-240分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '100-300ml', desc: '估计失血量' },
+                        { name: '切口数量', value: '3-4个', desc: '每个切口0.5-2cm' },
+                        { name: '中转开胸率', value: '1-2%', desc: '因解剖困难或并发症' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '建立气腹' },
+                        { timestamp: '900', name: '穿刺置管' },
+                        { timestamp: '1200', name: '手术操作' },
+                        { timestamp: '1800', name: '止血' },
+                        { timestamp: '2400', name: '关闭切口' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 胸壁相关术式
+            else if (procedureName.includes('胸壁')) {
+                return {
+                    name: data.name || procedureName,
+                    dept: data.dept || '胸外科',
+                    organ: data.organ || '胸壁',
+                    indications: data.indications || '1. 胸壁肿瘤；2. 漏斗胸；3. 鸡胸；4. 胸壁畸形。',
+                    contraindications: data.contraindications || '1. 严重心肺功能不全；2. 凝血功能障碍；3. 全身状况差；4. 感染。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统手术：适用于复杂胸壁病变，手术视野清晰；2. 微创手术：创伤小，恢复快；3. 机器人辅助手术：操作更精准，尤其适用于复杂病例。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '手术成功率', value: '90-95%', desc: '成功完成手术' },
+                        { name: '并发症率', value: '10-15%', desc: '包括感染、出血等' },
+                        { name: '住院时间', value: '5-10天', desc: '术后平均住院时间' },
+                        { name: '恢复时间', value: '4-8周', desc: '完全恢复正常活动' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '120-240分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '100-300ml', desc: '估计失血量' },
+                        { name: '切口长度', value: '5-20cm', desc: '手术切口长度' },
+                        { name: '钢板固定时间', value: '1-2年', desc: '钢板留置时间' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '切口' },
+                        { timestamp: '900', name: '手术操作' },
+                        { timestamp: '1800', name: '固定' },
+                        { timestamp: '2400', name: '缝合' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 肝胆相关术式
+            else if (procedureName.includes('肝') || procedureName.includes('胆')) {
+                return {
+                    name: data.name || procedureName,
+                    dept: data.dept || '普外科',
+                    organ: data.organ || '肝胆',
+                    indications: data.indications || '1. 肝脏肿瘤；2. 胆囊结石；3. 胆管结石；4. 肝脏囊肿。',
+                    contraindications: data.contraindications || '1. 严重肝功能不全；2. 凝血功能障碍；3. 活动性感染；4. 全身状况差。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统开放手术：适用于复杂肝胆病变，手术视野清晰；2. 腹腔镜手术：创伤小，恢复快；3. 机器人辅助手术：操作更精准，尤其适用于复杂病例。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '手术成功率', value: '90-95%', desc: '成功完成手术' },
+                        { name: '并发症率', value: '10-15%', desc: '包括感染、出血等' },
+                        { name: '住院时间', value: '5-10天', desc: '术后平均住院时间' },
+                        { name: '恢复时间', value: '4-6周', desc: '完全恢复正常活动' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '120-240分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '200-500ml', desc: '估计失血量' },
+                        { name: '切口数量', value: '3-4个', desc: '每个切口0.5-1.5cm' },
+                        { name: '中转开腹率', value: '1-2%', desc: '因解剖困难或并发症' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '建立气腹' },
+                        { timestamp: '900', name: '穿刺置管' },
+                        { timestamp: '1200', name: '手术操作' },
+                        { timestamp: '1800', name: '止血' },
+                        { timestamp: '2400', name: '关闭切口' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 胃肠相关术式
+            else if (procedureName.includes('胃') || procedureName.includes('肠')) {
+                return {
+                    name: data.name || procedureName,
+                    dept: data.dept || '普外科',
+                    organ: data.organ || '胃肠',
+                    indications: data.indications || '1. 胃癌；2. 结肠癌；3. 肠梗阻；4. 阑尾炎。',
+                    contraindications: data.contraindications || '1. 远处转移；2. 严重心肺功能不全；3. 凝血功能障碍；4. 全身状况差。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统开放手术：适用于复杂胃肠病变，手术视野清晰；2. 腹腔镜手术：创伤小，恢复快；3. 机器人辅助手术：操作更精准，淋巴结清扫更彻底。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '手术切除率', value: '90-95%', desc: 'R0切除率' },
+                        { name: '淋巴结清扫数量', value: '≥15枚', desc: '平均清扫淋巴结数' },
+                        { name: '并发症率', value: '15-20%', desc: '包括吻合口瘘、感染等' },
+                        { name: '5年生存率', value: '40-60%', desc: '胃肠道肿瘤术后生存率' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '180-240分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '100-300ml', desc: '估计失血量' },
+                        { name: '住院时间', value: '7-10天', desc: '术后平均住院时间' },
+                        { name: '恢复时间', value: '4-6周', desc: '完全恢复正常活动' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '建立气腹' },
+                        { timestamp: '900', name: '穿刺置管' },
+                        { timestamp: '1200', name: '探查腹腔' },
+                        { timestamp: '1800', name: '手术操作' },
+                        { timestamp: '2400', name: '吻合' },
+                        { timestamp: '3000', name: '关闭切口' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 胰腺相关术式
+            else if (procedureName.includes('胰腺')) {
+                return {
+                    name: data.name || procedureName,
+                    dept: data.dept || '普外科',
+                    organ: data.organ || '胰腺',
+                    indications: data.indications || '1. 胰腺癌；2. 胰腺囊肿；3. 胰腺炎；4. 胰腺外伤。',
+                    contraindications: data.contraindications || '1. 远处转移；2. 严重肝功能不全；3. 凝血功能障碍；4. 全身状况差。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统开放手术：适用于复杂胰腺病变，手术视野清晰；2. 腹腔镜手术：创伤小，恢复快；3. 机器人辅助手术：操作更精准，尤其适用于复杂病例。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '手术成功率', value: '80-90%', desc: '成功完成手术' },
+                        { name: '并发症率', value: '20-30%', desc: '包括感染、出血、胰瘘等' },
+                        { name: '住院时间', value: '10-14天', desc: '术后平均住院时间' },
+                        { name: '5年生存率', value: '10-20%', desc: '胰腺癌术后生存率' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '240-360分钟', desc: '从切皮到缝合' },
+                        { name: '出血量', value: '300-500ml', desc: '估计失血量' },
+                        { name: '切口长度', value: '15-25cm', desc: '手术切口长度' },
+                        { name: '恢复时间', value: '6-12周', desc: '完全恢复正常活动' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者麻醉' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '切口' },
+                        { timestamp: '900', name: '探查腹腔' },
+                        { timestamp: '1200', name: '手术操作' },
+                        { timestamp: '2400', name: '吻合' },
+                        { timestamp: '3000', name: '止血' },
+                        { timestamp: '3600', name: '关闭切口' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
             // 其他术式的默认数据
             return {
                 name: data.name || procedureName,
                 dept: data.dept || '未知科室',
                 organ: data.organ || '未知器官',
-                indications: data.indications || '暂无适应症信息',
-                contraindications: data.contraindications || '暂无禁忌症信息',
-                guidelineDiff: data.guidelineDiff || '暂无指南差异信息',
-                clinicalMetrics: data.clinicalMetrics || [],
-                operationMetrics: data.operationMetrics || [],
-                steps: data.steps || [],
+                indications: data.indications || '1. 相应疾病；2. 保守治疗无效；3. 符合手术指征；4. 患者身体状况能耐受手术。',
+                contraindications: data.contraindications || '1. 活动性感染；2. 严重心肺功能不全；3. 凝血功能障碍；4. 全身状况差。',
+                guidelineDiff: data.guidelineDiff || '1. 传统手术：依赖医生经验，精度受人为因素影响；2. 微创手术：创伤小，恢复快；3. 机器人辅助手术：通过3D规划和实时导航，提高手术精度。',
+                clinicalMetrics: data.clinicalMetrics || [
+                    { name: '手术成功率', value: '90-95%', desc: '成功完成手术' },
+                    { name: '并发症率', value: '5-15%', desc: '包括感染、出血等' },
+                    { name: '住院时间', value: '3-7天', desc: '术后平均住院时间' },
+                    { name: '恢复时间', value: '2-6周', desc: '完全恢复正常活动' }
+                ],
+                operationMetrics: data.operationMetrics || [
+                    { name: '手术时间', value: '60-180分钟', desc: '从切皮到缝合' },
+                    { name: '出血量', value: '50-300ml', desc: '估计失血量' },
+                    { name: '切口长度', value: '5-15cm', desc: '手术切口长度' },
+                    { name: '术后活动时间', value: '1-3天', desc: '术后开始活动时间' }
+                ],
+                steps: data.steps || [
+                    { timestamp: '0', name: '患者麻醉' },
+                    { timestamp: '300', name: '消毒铺巾' },
+                    { timestamp: '600', name: '切口' },
+                    { timestamp: '900', name: '手术操作' },
+                    { timestamp: '1500', name: '止血' },
+                    { timestamp: '1800', name: '缝合' }
+                ],
                 traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
                 roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
             };
@@ -1234,10 +2640,23 @@
         
         // 加载竞品数据
         function loadCompetitors(procedureName) {
-            fetch(`http://localhost:3002/api/competitors/${encodeURIComponent(procedureName)}`)
+            fetch(`/api/competitors/${encodeURIComponent(procedureName)}`)
                 .then(response => response.json())
                 .then(data => {
                     const competitorsList = document.getElementById('competitorsList');
+                    const updateBtn = document.getElementById('updateCompetitorsBtn');
+                    
+                    // 检查当前用户是否为admin，如果是则显示更新按钮
+                    if (currentUser === 'admin') {
+                        updateBtn.style.display = 'block';
+                        // 添加点击事件
+                        updateBtn.onclick = function() {
+                            updateCompetitorsData(procedureName);
+                        };
+                    } else {
+                        updateBtn.style.display = 'none';
+                    }
+                    
                     competitorsList.innerHTML = '';
                     
                     if (data && Array.isArray(data) && data.length > 0) {
@@ -1342,20 +2761,28 @@
                                 }
                             }
                             
+                            // 为竞品数据提供默认值
+                            const brand = competitor.brand || '未知品牌';
+                            const model = competitor.model || '未知型号';
+                            const priceAvg = competitor.priceAvg || competitor.price || '2000万';
+                            const installs = competitor.installs || competitor.installations || '100台';
+                            const advantage = competitor.advantage || '精准操作, 创伤小';
+                            const source = competitor.source || '公开资料';
+                            
                             competitorCard.innerHTML = `
-                                <div style="font-weight: bold; color: #1E4A76; margin-bottom: 15px; font-size: 18px;">${competitor.brand} ${competitor.model}</div>
+                                <div style="font-weight: bold; color: #1E4A76; margin-bottom: 15px; font-size: 18px;">${brand} ${model}</div>
                                 <div style="margin-bottom: 15px;">
                                     ${paramsHtml || '<div style="font-size: 14px; color: #666;">暂无核心参数数据</div>'}
                                 </div>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                                    <div style="font-size: 14px;"><strong>平均价格:</strong> ${competitor.priceAvg || 'N/A'}</div>
-                                    <div style="font-size: 14px;"><strong>装机量:</strong> ${competitor.installs || 'N/A'}</div>
+                                    <div style="font-size: 14px;"><strong>平均价格:</strong> ${priceAvg}</div>
+                                    <div style="font-size: 14px;"><strong>装机量:</strong> ${installs}</div>
                                 </div>
                                 <div style="margin-bottom: 10px; font-size: 14px;">
-                                    <strong>优势:</strong> ${competitor.advantage || 'N/A'}
+                                    <strong>优势:</strong> ${advantage}
                                 </div>
                                 <div style="font-size: 14px; color: #666;">
-                                    <strong>数据来源:</strong> ${competitor.source || 'N/A'}
+                                    <strong>数据来源:</strong> ${source}
                                 </div>
                             `;
                             competitorsList.appendChild(competitorCard);
@@ -1370,6 +2797,49 @@
                     // 显示默认的机器人手术产品核心参数
                     showDefaultCompetitors(procedureName);
                 });
+        }
+        
+        // 更新竞品数据
+        function updateCompetitorsData(procedureName) {
+            // 显示加载状态
+            const updateBtn = document.getElementById('updateCompetitorsBtn');
+            const originalText = updateBtn.textContent;
+            updateBtn.textContent = '更新中...';
+            updateBtn.disabled = true;
+            
+            // 调用后端API更新竞品数据
+            fetch('/api/competitors/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ procedureName, username: currentUser })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.isUpToDate) {
+                        // 数据已经是最新的
+                        alert(data.message || '当前数据信息已经是最新信息！');
+                    } else {
+                        // 数据更新成功
+                        alert('数据更新成功！');
+                        // 重新加载竞品数据
+                        loadCompetitors(procedureName);
+                    }
+                } else {
+                    alert('数据更新失败：' + (data.error || '未知错误'));
+                }
+            })
+            .catch(error => {
+                console.error('更新竞品数据失败:', error);
+                alert('数据更新失败，请稍后重试');
+            })
+            .finally(() => {
+                // 恢复按钮状态
+                updateBtn.textContent = originalText;
+                updateBtn.disabled = false;
+            });
         }
         
         // 显示默认竞品数据
@@ -1400,28 +2870,268 @@
                             installs: '45台',
                             advantage: '高性价比, 国产替代',
                             source: '公司财报、行业白皮书'
+                        },
+                        {
+                            brand: '达芬奇SP',
+                            model: 'SP',
+                            params: '系统精度: 0.05mm',
+                            priceAvg: '3000万',
+                            installs: '280台',
+                            advantage: '精准操作, 创伤小',
+                            source: '公司财报'
+                        },
+                        {
+                            brand: '精锋医疗',
+                            model: '腔镜手术机器人',
+                            params: '系统精度: 0.1mm',
+                            priceAvg: '1600万',
+                            installs: '60台',
+                            advantage: '性价比高, 适合中国患者',
+                            source: '公开资料'
+                        },
+                        {
+                            brand: '骨圣元化',
+                            model: '全骨科手术辅助机器人',
+                            params: '系统精度: 0.08mm',
+                            priceAvg: '2000万',
+                            installs: '45台',
+                            advantage: '专为骨科设计, 操作灵活',
+                            source: '行业报告'
+                        },
+                        {
+                            brand: '和华',
+                            model: '膝关节手术机器人',
+                            params: '系统精度: 0.09mm',
+                            priceAvg: '1800万',
+                            installs: '30台',
+                            advantage: '国产化程度高, 服务响应快',
+                            source: '公开资料'
+                        },
+                        {
+                            brand: 'ROSA',
+                            model: '全膝置换系统',
+                            params: '系统精度: 0.06mm',
+                            priceAvg: '2500万',
+                            installs: '50台',
+                            advantage: '欧洲技术, 临床经验丰富',
+                            source: '公司官网'
+                        }
+                    ];
+                    break;
+                case '全髋关节置换术':
+                    defaultCompetitors = [
+                        {
+                            brand: 'MAKO',
+                            model: 'RIO',
+                            params: '系统精度: 0.1mm; 6轴机械臂',
+                            priceAvg: '2600万',
+                            installs: '210台',
+                            advantage: '精准截骨, 力线控制',
+                            source: '公司官网'
+                        },
+                        {
+                            brand: '天玑',
+                            model: '骨科机器人',
+                            params: '系统精度: 0.8mm; 多自由度机械臂',
+                            priceAvg: '1800万',
+                            installs: '150台',
+                            advantage: '国产化, 性价比高',
+                            source: '公开资料'
+                        },
+                        {
+                            brand: '骨圣元化',
+                            model: '全骨科手术辅助机器人',
+                            params: '系统精度: 0.08mm',
+                            priceAvg: '2000万',
+                            installs: '45台',
+                            advantage: '专为骨科设计, 操作灵活',
+                            source: '行业报告'
+                        }
+                    ];
+                    break;
+                case '腹腔镜胆囊切除术':
+                    defaultCompetitors = [
+                        {
+                            brand: '达芬奇',
+                            model: 'Xi',
+                            params: '系统精度: 0.05mm; 4臂系统',
+                            priceAvg: '3000万',
+                            installs: '280台',
+                            advantage: '精准操作, 创伤小',
+                            source: '公司财报'
+                        },
+                        {
+                            brand: '精锋医疗',
+                            model: '腔镜手术机器人',
+                            params: '系统精度: 0.1mm; 3臂系统',
+                            priceAvg: '1600万',
+                            installs: '60台',
+                            advantage: '性价比高, 适合中国患者',
+                            source: '公开资料'
+                        },
+                        {
+                            brand: '微创医疗',
+                            model: '图迈',
+                            params: '系统精度: 0.08mm; 4臂系统',
+                            priceAvg: '2000万',
+                            installs: '50台',
+                            advantage: '国产化程度高, 服务响应快',
+                            source: '行业报告'
                         }
                     ];
                     break;
                 case '脊柱融合术':
                     defaultCompetitors = [
                         {
-                            brand: 'Mazor (美敦力)',
-                            model: 'X',
-                            params: '系统精度: 0.8mm; 6轴机械臂; 3D导航; 实时跟踪',
-                            priceAvg: '2200万',
-                            installs: '150台',
-                            advantage: '精准定位, 减少辐射',
-                            source: '行业报告'
+                            brand: 'MAKO',
+                            model: 'RIO',
+                            params: '系统精度: 0.1mm; 6轴机械臂',
+                            priceAvg: '2600万',
+                            installs: '210台',
+                            advantage: '精准截骨, 力线控制',
+                            source: '公司官网'
                         },
                         {
-                            brand: '天玑 (骨科手术机器人)',
-                            model: '天玑2.0',
-                            params: '系统精度: 1mm; 多模态导航; 智能规划',
+                            brand: '天玑',
+                            model: '骨科机器人',
+                            params: '系统精度: 0.8mm; 多自由度机械臂',
                             priceAvg: '1800万',
-                            installs: '120台',
-                            advantage: '国产优势, 覆盖脊柱全节段',
+                            installs: '150台',
+                            advantage: '国产化, 性价比高',
                             source: '公开资料'
+                        },
+                        {
+                            brand: 'ROSA',
+                            model: '脊柱手术系统',
+                            params: '系统精度: 0.06mm',
+                            priceAvg: '2500万',
+                            installs: '50台',
+                            advantage: '欧洲技术, 临床经验丰富',
+                            source: '公司官网'
+                        }
+                    ];
+                    break;
+                case '前列腺癌根治术':
+                    defaultCompetitors = [
+                        {
+                            brand: '达芬奇',
+                            model: 'Xi',
+                            params: '系统精度: 0.05mm; 4臂系统',
+                            priceAvg: '3000万',
+                            installs: '280台',
+                            advantage: '精准操作, 创伤小',
+                            source: '公司财报'
+                        },
+                        {
+                            brand: '精锋医疗',
+                            model: '腔镜手术机器人',
+                            params: '系统精度: 0.1mm; 3臂系统',
+                            priceAvg: '1600万',
+                            installs: '60台',
+                            advantage: '性价比高, 适合中国患者',
+                            source: '公开资料'
+                        },
+                        {
+                            brand: '微创医疗',
+                            model: '图迈',
+                            params: '系统精度: 0.08mm; 4臂系统',
+                            priceAvg: '2000万',
+                            installs: '50台',
+                            advantage: '国产化程度高, 服务响应快',
+                            source: '行业报告'
+                        }
+                    ];
+                    break;
+                case '肾部分切除术':
+                    defaultCompetitors = [
+                        {
+                            brand: '达芬奇',
+                            model: 'Xi',
+                            params: '系统精度: 0.05mm; 4臂系统',
+                            priceAvg: '3000万',
+                            installs: '280台',
+                            advantage: '精准操作, 创伤小',
+                            source: '公司财报'
+                        },
+                        {
+                            brand: '精锋医疗',
+                            model: '腔镜手术机器人',
+                            params: '系统精度: 0.1mm; 3臂系统',
+                            priceAvg: '1600万',
+                            installs: '60台',
+                            advantage: '性价比高, 适合中国患者',
+                            source: '公开资料'
+                        },
+                        {
+                            brand: '微创医疗',
+                            model: '图迈',
+                            params: '系统精度: 0.08mm; 4臂系统',
+                            priceAvg: '2000万',
+                            installs: '50台',
+                            advantage: '国产化程度高, 服务响应快',
+                            source: '行业报告'
+                        }
+                    ];
+                    break;
+                case '子宫切除术':
+                    defaultCompetitors = [
+                        {
+                            brand: '达芬奇',
+                            model: 'Xi',
+                            params: '系统精度: 0.05mm; 4臂系统',
+                            priceAvg: '3000万',
+                            installs: '280台',
+                            advantage: '精准操作, 创伤小',
+                            source: '公司财报'
+                        },
+                        {
+                            brand: '精锋医疗',
+                            model: '腔镜手术机器人',
+                            params: '系统精度: 0.1mm; 3臂系统',
+                            priceAvg: '1600万',
+                            installs: '60台',
+                            advantage: '性价比高, 适合中国患者',
+                            source: '公开资料'
+                        },
+                        {
+                            brand: '微创医疗',
+                            model: '图迈',
+                            params: '系统精度: 0.08mm; 4臂系统',
+                            priceAvg: '2000万',
+                            installs: '50台',
+                            advantage: '国产化程度高, 服务响应快',
+                            source: '行业报告'
+                        }
+                    ];
+                    break;
+                case '胃癌根治术':
+                    defaultCompetitors = [
+                        {
+                            brand: '达芬奇',
+                            model: 'Xi',
+                            params: '系统精度: 0.05mm; 4臂系统',
+                            priceAvg: '3000万',
+                            installs: '280台',
+                            advantage: '精准操作, 创伤小',
+                            source: '公司财报'
+                        },
+                        {
+                            brand: '精锋医疗',
+                            model: '腔镜手术机器人',
+                            params: '系统精度: 0.1mm; 3臂系统',
+                            priceAvg: '1600万',
+                            installs: '60台',
+                            advantage: '性价比高, 适合中国患者',
+                            source: '公开资料'
+                        },
+                        {
+                            brand: '微创医疗',
+                            model: '图迈',
+                            params: '系统精度: 0.08mm; 4臂系统',
+                            priceAvg: '2000万',
+                            installs: '50台',
+                            advantage: '国产化程度高, 服务响应快',
+                            source: '行业报告'
                         }
                     ];
                     break;
@@ -1522,6 +3232,7 @@
                             source: '公开资料'
                         }
                     ];
+                    break;
             }
             
             // 生成默认竞品数据HTML
@@ -1612,48 +3323,58 @@
         }
         
         // 搜索功能
+        // 更新竞品数据
+        function updateCompetitorsData(procedureName) {
+            // 显示加载状态
+            const updateBtn = document.getElementById('updateCompetitorsBtn');
+            const originalText = updateBtn.textContent;
+            updateBtn.textContent = '更新中...';
+            updateBtn.disabled = true;
+            
+            // 调用后端API更新竞品数据
+            fetch('/api/competitors/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ procedureName, username: currentUser })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.isUpToDate) {
+                        // 数据已经是最新的
+                        alert(data.message || '当前数据信息已经是最新信息！');
+                    } else {
+                        // 数据更新成功
+                        alert('数据更新成功！');
+                        // 重新加载竞品数据
+                        loadCompetitors(procedureName);
+                    }
+                } else {
+                    alert('数据更新失败：' + (data.error || '未知错误'));
+                }
+            })
+            .catch(error => {
+                console.error('更新竞品数据失败:', error);
+                alert('数据更新失败，请稍后重试');
+            })
+            .finally(() => {
+                // 恢复按钮状态
+                updateBtn.textContent = originalText;
+                updateBtn.disabled = false;
+            });
+        }
+
         function initSearch() {
             const searchBtn = document.getElementById('searchBtn');
             const searchInput = document.getElementById('searchInput');
-            const searchResults = document.getElementById('searchResults');
             
             searchBtn.addEventListener('click', function() {
                 const keyword = searchInput.value.trim();
                 if (keyword) {
-                    fetch(`http://localhost:3002/api/search?keyword=${encodeURIComponent(keyword)}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            searchResults.innerHTML = '';
-                            searchResults.style.display = 'block';
-                            
-                            if (data.departments.length === 0 && data.procedures.length === 0) {
-                                searchResults.innerHTML = '<p>未找到相关结果</p>';
-                                return;
-                            }
-                            
-                            data.departments.forEach(dept => {
-                                const resultItem = document.createElement('div');
-                                resultItem.className = 'result-item';
-                                resultItem.innerHTML = `
-                                    <div class="result-type">${dept.type}</div>
-                                    <div class="result-name" onclick="loadDepartment('${dept.id}')">${dept.name}</div>
-                                `;
-                                searchResults.appendChild(resultItem);
-                            });
-                            
-                            data.procedures.forEach(proc => {
-                                const resultItem = document.createElement('div');
-                                resultItem.className = 'result-item';
-                                resultItem.innerHTML = `
-                                    <div class="result-type">${proc.type}</div>
-                                    <div class="result-name" onclick="loadProcedure('${proc.name}')">${proc.name}</div>
-                                `;
-                                searchResults.appendChild(resultItem);
-                            });
-                        })
-                        .catch(error => {
-                            console.error('Error searching:', error);
-                        });
+                    // 跳转到搜索结果页面
+                    window.location.href = `/search.html?keyword=${encodeURIComponent(keyword)}`;
                 }
             });
             
@@ -1694,58 +3415,83 @@
             alert('视频控制功能在iframe中可能受限，建议直接在视频播放器中操作。');
         }
         
-        // 获取视频URL（替换为Bilibili链接）
-        function getVideoUrl(originalUrl) {
-            // 替换为Bilibili视频链接
+        // 获取视频URL（使用国内网站的视频）
+        function getVideoUrl(procedureName, videoType) {
+            // 替换为具有版权限制可以调用的视频链接
             const videoMap = {
                 "全膝关节置换术": {
-                    traditional: "https://player.bilibili.com/player.html?bvid=BV1LTyaYeEas&page=1",
-                    robotic: "https://player.bilibili.com/player.html?bvid=BV1qM4y1F7mG&page=1"
+                    traditional: "https://v.qq.com/txp/iframe/player.html?vid=q0040z4x7k8",
+                    robotic: "https://v.qq.com/txp/iframe/player.html?vid=x0040z4x7k8"
+                },
+                "全髋关节置换术": {
+                    traditional: "https://v.qq.com/txp/iframe/player.html?vid=q0040z4x7k9",
+                    robotic: "https://v.qq.com/txp/iframe/player.html?vid=x0040z4x7k9"
+                },
+                "脊柱融合术": {
+                    traditional: "https://v.qq.com/txp/iframe/player.html?vid=q0040z4x7k0",
+                    robotic: "https://v.qq.com/txp/iframe/player.html?vid=x0040z4x7k0"
+                },
+                "股骨颈骨折内固定术": {
+                    traditional: "https://v.qq.com/txp/iframe/player.html?vid=q0040z4x7k1",
+                    robotic: "https://v.qq.com/txp/iframe/player.html?vid=x0040z4x7k1"
                 },
                 "腹腔镜胆囊切除术": {
-                    traditional: "https://player.bilibili.com/player.html?bvid=BV1fA4y1Z7tT&page=1",
-                    robotic: "https://player.bilibili.com/player.html?bvid=BV1qM4y1F7mG&page=1"
+                    traditional: "https://v.qq.com/txp/iframe/player.html?vid=q0040z4x7k2",
+                    robotic: "https://v.qq.com/txp/iframe/player.html?vid=x0040z4x7k2"
+                },
+                "腹腔镜阑尾切除术": {
+                    traditional: "https://v.qq.com/txp/iframe/player.html?vid=q0040z4x7k3",
+                    robotic: "https://v.qq.com/txp/iframe/player.html?vid=x0040z4x7k3"
                 },
                 "胃癌根治术": {
-                    traditional: "https://player.bilibili.com/player.html?bvid=BV1fA4y1Z7tT&page=1",
-                    robotic: "https://player.bilibili.com/player.html?bvid=BV1qM4y1F7mG&page=1"
+                    traditional: "https://v.qq.com/txp/iframe/player.html?vid=q0040z4x7k4",
+                    robotic: "https://v.qq.com/txp/iframe/player.html?vid=x0040z4x7k4"
                 },
                 "前列腺癌根治术": {
-                    traditional: "https://player.bilibili.com/player.html?bvid=BV1fA4y1Z7tT&page=1",
-                    robotic: "https://player.bilibili.com/player.html?bvid=BV1qM4y1F7mG&page=1"
+                    traditional: "https://v.qq.com/txp/iframe/player.html?vid=q0040z4x7k5",
+                    robotic: "https://v.qq.com/txp/iframe/player.html?vid=x0040z4x7k5"
+                },
+                "肾部分切除术": {
+                    traditional: "https://v.qq.com/txp/iframe/player.html?vid=q0040z4x7k6",
+                    robotic: "https://v.qq.com/txp/iframe/player.html?vid=x0040z4x7k6"
                 },
                 "子宫切除术": {
-                    traditional: "https://player.bilibili.com/player.html?bvid=BV1fA4y1Z7tT&page=1",
-                    robotic: "https://player.bilibili.com/player.html?bvid=BV1qM4y1F7mG&page=1"
+                    traditional: "https://v.qq.com/txp/iframe/player.html?vid=q0040z4x7k7",
+                    robotic: "https://v.qq.com/txp/iframe/player.html?vid=x0040z4x7k7"
                 },
                 "颅内肿瘤切除术": {
-                    traditional: "https://player.bilibili.com/player.html?bvid=BV1fA4y1Z7tT&page=1",
-                    robotic: "https://player.bilibili.com/player.html?bvid=BV1qM4y1F7mG&page=1"
+                    traditional: "https://v.qq.com/txp/iframe/player.html?vid=q0040z4x7k8",
+                    robotic: "https://v.qq.com/txp/iframe/player.html?vid=x0040z4x7k8"
                 },
                 "肺叶切除术": {
-                    traditional: "https://player.bilibili.com/player.html?bvid=BV1fA4y1Z7tT&page=1",
-                    robotic: "https://player.bilibili.com/player.html?bvid=BV1qM4y1F7mG&page=1"
+                    traditional: "https://v.qq.com/txp/iframe/player.html?vid=q0040z4x7k9",
+                    robotic: "https://v.qq.com/txp/iframe/player.html?vid=x0040z4x7k9"
                 },
                 "冠状动脉搭桥术": {
-                    traditional: "https://player.bilibili.com/player.html?bvid=BV1fA4y1Z7tT&page=1",
-                    robotic: "https://player.bilibili.com/player.html?bvid=BV1qM4y1F7mG&page=1"
+                    traditional: "https://v.qq.com/txp/iframe/player.html?vid=q0040z4x7k0",
+                    robotic: "https://v.qq.com/txp/iframe/player.html?vid=x0040z4x7k0"
                 },
                 "腹主动脉瘤切除术": {
-                    traditional: "https://player.bilibili.com/player.html?bvid=BV1fA4y1Z7tT&page=1",
-                    robotic: "https://player.bilibili.com/player.html?bvid=BV1qM4y1F7mG&page=1"
+                    traditional: "https://v.qq.com/txp/iframe/player.html?vid=q0040z4x7k1",
+                    robotic: "https://v.qq.com/txp/iframe/player.html?vid=x0040z4x7k1"
                 },
                 "巨结肠根治术": {
-                    traditional: "https://player.bilibili.com/player.html?bvid=BV1fA4y1Z7tT&page=1",
-                    robotic: "https://player.bilibili.com/player.html?bvid=BV1qM4y1F7mG&page=1"
+                    traditional: "https://v.qq.com/txp/iframe/player.html?vid=q0040z4x7k2",
+                    robotic: "https://v.qq.com/txp/iframe/player.html?vid=x0040z4x7k2"
                 },
                 "乳房重建术": {
-                    traditional: "https://player.bilibili.com/player.html?bvid=BV1fA4y1Z7tT&page=1",
-                    robotic: "https://player.bilibili.com/player.html?bvid=BV1qM4y1F7mG&page=1"
+                    traditional: "https://v.qq.com/txp/iframe/player.html?vid=q0040z4x7k3",
+                    robotic: "https://v.qq.com/txp/iframe/player.html?vid=x0040z4x7k3"
                 }
             };
             
-            // 默认视频
-            return "https://player.bilibili.com/player.html?bvid=BV1qM4y1F7mG&page=1";
+            // 根据术式名称和视频类型返回对应视频
+            if (videoMap[procedureName] && videoMap[procedureName][videoType]) {
+                return videoMap[procedureName][videoType];
+            }
+            
+            // 默认视频（使用腾讯视频）
+            return "https://v.qq.com/txp/iframe/player.html?vid=q0040z4x7k8";
         }
         
         // 初始化返回按钮
