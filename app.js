@@ -785,38 +785,59 @@ app.post('/api/users/login', async (req, res) => {
             console.log('数据库连接失败，使用默认用户');
             // 默认用户：admin / 123456
             if (username === 'admin' && password === '123456') {
-                res.json({ success: true, message: '数据库连接失败，使用默认账户登录' });
+                res.json({ success: true });
                 return;
             }
             // 默认普通用户：user / user123
             if (username === 'user' && password === 'user123') {
-                res.json({ success: true, message: '数据库连接失败，使用默认账户登录' });
+                res.json({ success: true });
                 return;
             }
-            res.json({ success: false, message: '数据库连接失败，用户名或密码错误' });
+            res.json({ success: false, message: '数据库连接失败' });
             return;
         }
         
         // 数据库连接正常，优先从数据库中查找用户
         console.log('数据库连接正常，尝试从数据库中查找用户');
-        const user = await User.findOne({ username, password });
+        // 先查找用户是否存在
+        const user = await User.findOne({ username });
         
         if (user) {
-            res.json({ success: true });
+            // 用户存在，检查密码
+            if (user.password === password) {
+                res.json({ success: true });
+            } else {
+                // 密码错误
+                res.json({ success: false, message: '密码输入错误！' });
+            }
         } else {
             // 数据库中没有找到用户，使用默认用户
             console.log('数据库中没有找到用户，检查默认用户');
-            // 默认用户：admin / 123456
-            if (username === 'admin' && password === '123456') {
-                res.json({ success: true, message: '数据库中未找到用户，使用默认账户登录' });
-                return;
+            // 检查是否是默认用户
+            if (username === 'admin') {
+                // admin是默认用户，检查密码
+                if (password === '123456') {
+                    res.json({ success: true, message: '数据库中未找到用户，使用默认账户登录' });
+                    return;
+                } else {
+                    // 密码错误
+                    res.json({ success: false, message: '密码输入错误！' });
+                    return;
+                }
             }
-            // 默认普通用户：user / user123
-            if (username === 'user' && password === 'user123') {
-                res.json({ success: true, message: '数据库中未找到用户，使用默认账户登录' });
-                return;
+            if (username === 'user') {
+                // user是默认用户，检查密码
+                if (password === 'user123') {
+                    res.json({ success: true, message: '数据库中未找到用户，使用默认账户登录' });
+                    return;
+                } else {
+                    // 密码错误
+                    res.json({ success: false, message: '密码输入错误！' });
+                    return;
+                }
             }
-            res.json({ success: false, message: '用户名或密码错误' });
+            // 用户不存在
+            res.json({ success: false, message: '该用户不存在！' });
         }
     } catch (error) {
         console.error('登录失败:', error);
