@@ -1,4 +1,7 @@
-// Vercel Serverless Function 入口
 const app = require('../app');
 
-module.exports = app;
+// Vercel Serverless Function 入口
+module.exports = async (req, res) => {
+  // 让 Express 处理请求
+  app(req, res);
+};
