@@ -1163,15 +1163,21 @@ app.get('/api/search', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3002;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Health check: http://localhost:${PORT}/health`);
-  console.log(`API endpoints:`);
-  console.log(`- GET http://localhost:${PORT}/api/departments`);
-  console.log(`- GET http://localhost:${PORT}/api/departments/:id`);
-  console.log(`- GET http://localhost:${PORT}/api/procedures/:name`);
-  console.log(`- GET http://localhost:${PORT}/api/competitors/:procedureName`);
-  console.log(`- POST http://localhost:${PORT}/api/competitors/update`);
-  console.log(`- GET http://localhost:${PORT}/api/search?keyword=关键词`);
-});
+// 导出 app 对象供 Vercel 使用
+module.exports = app;
+
+// 本地开发时才启动服务器
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = 3002;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Health check: http://localhost:${PORT}/health`);
+    console.log(`API endpoints:`);
+    console.log(`- GET http://localhost:${PORT}/api/departments`);
+    console.log(`- GET http://localhost:${PORT}/api/departments/:id`);
+    console.log(`- GET http://localhost:${PORT}/api/procedures/:name`);
+    console.log(`- GET http://localhost:${PORT}/api/competitors/:procedureName`);
+    console.log(`- POST http://localhost:${PORT}/api/competitors/update`);
+    console.log(`- GET http://localhost:${PORT}/api/search?keyword=关键词`);
+  });
+}
