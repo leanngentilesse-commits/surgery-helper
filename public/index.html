@@ -3394,7 +3394,7 @@
         
         // 加载科室详情
         function loadDepartment(deptId) {
-            fetch(`http://localhost:3002/api/departments/${deptId}`)
+                      fetch(`/api/departments/${deptId}`)
                 .then(response => response.json())
                 .then(data => {
                     // 移除所有菜单项的active类
