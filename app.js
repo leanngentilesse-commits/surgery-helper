@@ -779,11 +779,37 @@ app.post('/api/users/register', async (req, res) => {
 app.post('/api/users/login', async (req, res) => {
     try {
         const { username, password } = req.body;
-        const user = await User.findOne({ username, password });
+        
+        // 首先尝试从数据库中查找用户
+        let user = null;
+        if (dbConnected) {
+            user = await User.findOne({ username, password });
+        }
+        
+        // 如果数据库中没有找到用户，使用默认用户
+        if (!user) {
+            // 默认用户：admin / 123456
+            if (username === 'admin' && password === '123456') {
+                res.json({ success: true });
+                return;
+            }
+            // 默认普通用户：user / user123
+            if (username === 'user' && password === 'user123') {
+                res.json({ success: true });
+                return;
+            }
+        }
+        
         res.json({ success: !!user });
     } catch (error) {
         console.error('登录失败:', error);
-        res.json({ success: false });
+        // 即使出错，也允许默认用户登录
+        const { username, password } = req.body;
+        if ((username === 'admin' && password === '123456') || (username === 'user' && password === 'user123')) {
+            res.json({ success: true });
+        } else {
+            res.json({ success: false });
+        }
     }
 });
 
