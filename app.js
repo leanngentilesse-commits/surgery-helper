@@ -27,6 +27,16 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// 健康检查端点
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    dbConnected: dbConnected,
+    version: '1.0.0'
+  });
+});
+
 // 默认数据（当MongoDB连接失败时使用）
 const defaultDepartments = [
   { id: "general", name: "普外科", organs: [

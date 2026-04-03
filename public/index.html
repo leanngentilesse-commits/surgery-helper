@@ -1095,7 +1095,7 @@
                 })
                 .catch(error => {
                     console.error('登录失败:', error);
-                    loginError.textContent = '系统错误，请稍后重试';
+                    loginError.textContent = `系统错误，请稍后重试（${error.message || '网络连接失败'}）`;
                     loginError.style.display = 'block';
                 });
             });
