@@ -14,10 +14,18 @@ let dbConnected = false;
 
 const app = express();
 
-// 配置CORS
+// 配置CORS - 适配 Vercel 部署
 const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['*'];
 app.use(cors({
-  origin: allowedOrigins, // 生产环境应该设置具体的域名
+  origin: function(origin, callback) {
+    // 允许没有 origin 的请求（如 Vercel Serverless Functions 内部调用）
+    // 或者在 allowedOrigins 列表中
+    if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
@@ -1200,17 +1208,24 @@ async function crawlCompetitors(procedureName) {
   }
 }
 
-// 用户模型
-const User = mongoose.model('User', new mongoose.Schema({
-  username: String,
-  password: String
-}));
+// 用户模型 - 延迟加载以避免在 Vercel 上尝试连接数据库
+let User;
+const getUserModel = () => {
+  if (!User) {
+    User = mongoose.model('User', new mongoose.Schema({
+      username: String,
+      password: String
+    }));
+  }
+  return User;
+};
 
 // 检查账号是否已存在
 app.post('/api/users/check', async (req, res) => {
     try {
         const { username } = req.body;
-        const user = await User.findOne({ username });
+        const UserModel = getUserModel();
+        const user = await UserModel.findOne({ username });
         res.json({ exists: !!user });
     } catch (error) {
         console.error('检查账号失败:', error);
@@ -1222,7 +1237,8 @@ app.post('/api/users/check', async (req, res) => {
 app.post('/api/users/register', async (req, res) => {
     try {
         const { username, password } = req.body;
-        const user = new User({ username, password });
+        const UserModel = getUserModel();
+        const user = new UserModel({ username, password });
         await user.save();
         res.json({ success: true });
     } catch (error) {
@@ -1256,7 +1272,8 @@ app.post('/api/users/login', async (req, res) => {
         // 数据库连接正常，优先从数据库中查找用户
         console.log('数据库连接正常，尝试从数据库中查找用户');
         // 先查找用户是否存在
-        const user = await User.findOne({ username });
+        const UserModel = getUserModel();
+        const user = await UserModel.findOne({ username });
         
         if (user) {
             // 用户存在，检查密码
@@ -1581,7 +1598,7 @@ module.exports = app;
 
 // 本地开发时才启动服务器
 if (process.env.NODE_ENV !== 'production') {
-  const PORT = 3004;
+  const PORT = 3005;
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Health check: http://localhost:${PORT}/health`);
