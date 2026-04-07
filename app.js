@@ -4,7 +4,13 @@ const mongoose = require('mongoose');
 const path = require('path');
 const axios = require('axios');
 const cheerio = require('cheerio');
-const { Department, Procedure, Competitor } = require('./models');
+// 移除对models.js的依赖，使用默认数据
+
+// 导入爬虫模块
+const crawler = require('./crawler');
+
+// 数据库连接状态
+let dbConnected = false;
 
 const app = express();
 
@@ -37,6 +43,14 @@ app.get('/health', (req, res) => {
   });
 });
 
+// 配置端点 - 返回服务配置信息
+app.get('/api/config', (req, res) => {
+  res.json({
+    mcpPort: process.env.MCP_PORT || 3003,
+    mcpEnabled: true
+  });
+});
+
 // 默认数据（当MongoDB连接失败时使用）
 const defaultDepartments = [
   { id: "general", name: "普外科", organs: [
@@ -47,10 +61,7 @@ const defaultDepartments = [
     { name: "膝关节", order: 1, procedures: ["全膝关节置换术"] },
     { name: "脊柱", order: 2, procedures: ["脊柱融合术"] }
   ]},
-  { id: "urology", name: "泌尿外科", organs: [
-    { name: "前列腺", order: 1, procedures: ["前列腺癌根治术"] },
-    { name: "肾脏", order: 2, procedures: ["肾部分切除术"] }
-  ]},
+
   { id: "gyn", name: "妇产科", organs: [
     { name: "子宫", order: 1, procedures: ["子宫切除术"] }
   ]},
@@ -96,11 +107,66 @@ const defaultProcedures = {
       { name: "学习曲线陡峭度", value: "20例", desc: "达到稳定操作所需例数" }
     ],
     guidelineDiff: "最新指南强调力线重建与软组织平衡，机器人辅助可提高截骨精度。",
-    steps: [
-      { name: "股骨远端截骨", timestamp: 20 },
-      { name: "胫骨近端截骨", timestamp: 85 },
-      { name: "试模与软组织平衡", timestamp: 140 },
-      { name: "假体植入", timestamp: 200 }
+    traditionalSteps: [
+      { name: "皮肤消毒与铺巾", timestamp: 5 },
+      { name: "切开皮肤与筋膜", timestamp: 15 },
+      { name: "股骨远端截骨", timestamp: 30 },
+      { name: "胫骨近端截骨", timestamp: 90 },
+      { name: "试模与软组织平衡", timestamp: 150 },
+      { name: "假体植入与固定", timestamp: 210 },
+      { name: "缝合伤口", timestamp: 240 }
+    ],
+    roboticSteps: [
+      { name: "皮肤消毒与铺巾", timestamp: 5 },
+      { name: "安装机器人臂与注册", timestamp: 25 },
+      { name: "股骨远端精准截骨", timestamp: 50 },
+      { name: "胫骨近端精准截骨", timestamp: 100 },
+      { name: "机器人辅助试模与平衡", timestamp: 140 },
+      { name: "假体植入与固定", timestamp: 180 },
+      { name: "缝合伤口", timestamp: 210 }
+    ],
+    traditionalVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
+    roboticVideo: "https://www.w3schools.com/html/movie.mp4"
+  },
+  "全髋关节置换术": {
+    name: "全髋关节置换术",
+    dept: "骨科",
+    organ: "髋关节",
+    indications: "1. 重度髋关节骨关节炎；2. 股骨头缺血性坏死；3. 髋关节发育不良；4. 类风湿关节炎；5. 创伤性关节炎。",
+    contraindications: "1. 活动性感染；2. 严重骨质疏松；3. 神经源性关节病；4. 严重心肺功能不全。",
+    guidelines: [{ name: "《中国髋关节置换术加速康复指南》", status: "现行" }],
+    clinicalMetrics: [
+      { name: "髋臼假体位置", value: "±5°", desc: "外展角和前倾角与术前规划偏差" },
+      { name: "下肢长度差异", value: "≤5mm", desc: "术后双侧下肢长度差异" },
+      { name: "5年假体生存率", value: "≥95%", desc: "翻修率≤5%" },
+      { name: "术后疼痛评分", value: "2-3分", desc: "VAS评分，满分10分" }
+    ],
+    operationMetrics: [
+      { name: "手术时间", value: "90-120分钟", desc: "从切皮到缝合" },
+      { name: "出血量", value: "300-500ml", desc: "估计失血量" },
+      { name: "住院时间", value: "3-7天", desc: "术后平均住院时间" },
+      { name: "恢复时间", value: "3-6个月", desc: "完全恢复正常活动" }
+    ],
+    guidelineDiff: "1. 传统手术：依赖医生经验，髋臼假体位置和角度受人为因素影响；2. 机器人辅助手术：通过3D规划和实时导航，提高髋臼假体放置精度和下肢长度恢复准确性。",
+    traditionalSteps: [
+      { name: "皮肤消毒与铺巾", timestamp: 5 },
+      { name: "切开皮肤与筋膜", timestamp: 15 },
+      { name: "暴露髋关节", timestamp: 30 },
+      { name: "股骨颈截骨", timestamp: 60 },
+      { name: "髋臼准备", timestamp: 120 },
+      { name: "股骨准备", timestamp: 180 },
+      { name: "假体植入与固定", timestamp: 240 },
+      { name: "缝合伤口", timestamp: 300 }
+    ],
+    roboticSteps: [
+      { name: "皮肤消毒与铺巾", timestamp: 5 },
+      { name: "安装机器人臂与注册", timestamp: 25 },
+      { name: "机器人辅助暴露髋关节", timestamp: 50 },
+      { name: "股骨颈截骨", timestamp: 80 },
+      { name: "机器人辅助髋臼精准准备", timestamp: 140 },
+      { name: "机器人辅助股骨准备", timestamp: 200 },
+      { name: "机器人辅助假体精准植入", timestamp: 260 },
+      { name: "缝合伤口", timestamp: 300 }
     ],
     traditionalVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
     roboticVideo: "https://www.w3schools.com/html/movie.mp4"
@@ -124,11 +190,287 @@ const defaultProcedures = {
       { name: "机械臂轴数", value: "4轴", desc: "达芬奇标准配置" }
     ],
     guidelineDiff: "2023版共识强调胆总管探查指征，新版主张选择性引流。",
-    steps: [
-      { name: "建立气腹与穿刺", timestamp: 10 },
-      { name: "解剖胆囊三角", timestamp: 45 },
-      { name: "离断胆囊管及动脉", timestamp: 90 },
-      { name: "剥离胆囊床", timestamp: 150 }
+    traditionalSteps: [
+      { name: "皮肤消毒与铺巾", timestamp: 5 },
+      { name: "建立气腹与穿刺", timestamp: 15 },
+      { name: "置入腹腔镜与器械", timestamp: 25 },
+      { name: "解剖胆囊三角", timestamp: 50 },
+      { name: "离断胆囊管及动脉", timestamp: 95 },
+      { name: "剥离胆囊床", timestamp: 145 },
+      { name: "取出胆囊", timestamp: 170 },
+      { name: "缝合穿刺孔", timestamp: 190 }
+    ],
+    roboticSteps: [
+      { name: "皮肤消毒与铺巾", timestamp: 5 },
+      { name: "建立气腹与穿刺", timestamp: 15 },
+      { name: "安装机器人臂", timestamp: 30 },
+      { name: "机器人辅助解剖胆囊三角", timestamp: 60 },
+      { name: "机器人辅助离断胆囊管及动脉", timestamp: 100 },
+      { name: "机器人辅助剥离胆囊床", timestamp: 135 },
+      { name: "取出胆囊", timestamp: 155 },
+      { name: "缝合穿刺孔", timestamp: 175 }
+    ],
+    traditionalVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
+    roboticVideo: "https://www.w3schools.com/html/movie.mp4"
+  },
+  "脊柱融合术": {
+    name: "脊柱融合术",
+    dept: "骨科",
+    organ: "脊柱",
+    indications: "1. 腰椎间盘突出症；2. 腰椎滑脱；3. 脊柱侧弯；4. 脊柱骨折；5. 脊柱肿瘤。",
+    contraindications: "1. 严重骨质疏松；2. 活动性感染；3. 严重心肺功能不全；4. 凝血功能障碍。",
+    guidelines: [{ name: "《脊柱外科手术指南》", status: "现行" }],
+    clinicalMetrics: [
+      { name: "置钉准确率", value: "98-99%", desc: "螺钉位置优良率" },
+      { name: "融合率", value: "90-95%", desc: "术后1年融合成功率" },
+      { name: "并发症率", value: "5-10%", desc: "包括感染、神经损伤等" },
+      { name: "住院时间", value: "5-7天", desc: "术后平均住院时间" }
+    ],
+    operationMetrics: [
+      { name: "手术时间", value: "120-240分钟", desc: "从切皮到缝合" },
+      { name: "出血量", value: "200-500ml", desc: "估计失血量" },
+      { name: "辐射暴露", value: "减少70%", desc: "机器人辅助相比传统透视" },
+      { name: "恢复时间", value: "3-6个月", desc: "完全恢复正常活动" }
+    ],
+    guidelineDiff: "1. 传统开放手术：视野清晰，适用于复杂病变；2. 微创手术：创伤小，恢复快；3. 机器人辅助手术：提高置钉精度，减少辐射暴露。",
+    traditionalSteps: [
+      { name: "皮肤消毒与铺巾", timestamp: 5 },
+      { name: "切开皮肤与筋膜", timestamp: 15 },
+      { name: "暴露脊柱", timestamp: 30 },
+      { name: "椎弓根置钉", timestamp: 60 },
+      { name: "椎体间融合", timestamp: 120 },
+      { name: "安装内固定", timestamp: 180 },
+      { name: "缝合伤口", timestamp: 240 }
+    ],
+    roboticSteps: [
+      { name: "皮肤消毒与铺巾", timestamp: 5 },
+      { name: "安装机器人臂与注册", timestamp: 25 },
+      { name: "机器人辅助暴露脊柱", timestamp: 50 },
+      { name: "机器人辅助椎弓根精准置钉", timestamp: 80 },
+      { name: "椎体间融合", timestamp: 140 },
+      { name: "安装内固定", timestamp: 200 },
+      { name: "缝合伤口", timestamp: 240 }
+    ],
+    traditionalVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
+    roboticVideo: "https://www.w3schools.com/html/movie.mp4"
+  },
+  "肺叶切除术": {
+    name: "肺叶切除术",
+    dept: "胸外科",
+    organ: "肺部",
+    indications: "1. 早期肺癌；2. 肺部良性肿瘤；3. 肺脓肿；4. 支气管扩张。",
+    contraindications: "1. 严重心肺功能不全；2. 远处转移；3. 凝血功能障碍；4. 全身状况差。",
+    guidelines: [{ name: "《肺癌外科治疗指南》", status: "现行" }],
+    clinicalMetrics: [
+      { name: "手术成功率", value: "95-99%", desc: "成功切除病变肺叶" },
+      { name: "并发症率", value: "10-15%", desc: "包括肺炎、肺不张等" },
+      { name: "住院时间", value: "5-7天", desc: "术后平均住院时间" },
+      { name: "5年生存率", value: "60-80%", desc: "早期肺癌术后生存率" }
+    ],
+    operationMetrics: [
+      { name: "手术时间", value: "120-180分钟", desc: "从切皮到缝合" },
+      { name: "出血量", value: "100-300ml", desc: "估计失血量" },
+      { name: "切口数量", value: "3-4个", desc: "每个切口0.5-2cm" },
+      { name: "恢复时间", value: "4-6周", desc: "完全恢复正常活动" }
+    ],
+    guidelineDiff: "1. 传统开胸手术：适用于复杂肺部病变，手术视野清晰；2. 胸腔镜手术：创伤小，恢复快；3. 机器人辅助手术：操作更精准，尤其适用于复杂病例。",
+    traditionalSteps: [
+      { name: "皮肤消毒与铺巾", timestamp: 5 },
+      { name: "建立气腹与穿刺", timestamp: 15 },
+      { name: "置入胸腔镜与器械", timestamp: 25 },
+      { name: "探查胸腔", timestamp: 50 },
+      { name: "游离肺叶", timestamp: 95 },
+      { name: "离断肺动脉、肺静脉", timestamp: 145 },
+      { name: "离断支气管", timestamp: 170 },
+      { name: "切除肺叶", timestamp: 190 },
+      { name: "关闭切口", timestamp: 210 }
+    ],
+    roboticSteps: [
+      { name: "皮肤消毒与铺巾", timestamp: 5 },
+      { name: "建立气腹与穿刺", timestamp: 15 },
+      { name: "安装机器人臂", timestamp: 30 },
+      { name: "机器人辅助探查胸腔", timestamp: 60 },
+      { name: "机器人辅助游离肺叶", timestamp: 100 },
+      { name: "机器人辅助离断肺动脉、肺静脉", timestamp: 135 },
+      { name: "机器人辅助离断支气管", timestamp: 155 },
+      { name: "切除肺叶", timestamp: 175 },
+      { name: "关闭切口", timestamp: 195 }
+    ],
+    traditionalVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
+    roboticVideo: "https://www.w3schools.com/html/movie.mp4"
+  },
+  "子宫切除术": {
+    name: "子宫切除术",
+    dept: "妇产科",
+    organ: "子宫",
+    indications: "1. 子宫肌瘤；2. 子宫内膜癌；3. 子宫脱垂；4. 异常子宫出血。",
+    contraindications: "1. 严重凝血功能障碍；2. 急性感染；3. 严重心肺功能不全；4. 全身状况差。",
+    guidelines: [{ name: "《妇科手术指南》", status: "现行" }],
+    clinicalMetrics: [
+      { name: "手术成功率", value: "99%", desc: "成功切除子宫" },
+      { name: "并发症率", value: "5-10%", desc: "包括感染、出血等" },
+      { name: "住院时间", value: "2-4天", desc: "术后平均住院时间" },
+      { name: "恢复时间", value: "4-6周", desc: "完全恢复正常活动" }
+    ],
+    operationMetrics: [
+      { name: "手术时间", value: "90-150分钟", desc: "从切皮到缝合" },
+      { name: "出血量", value: "100-300ml", desc: "估计失血量" },
+      { name: "切口数量", value: "3-4个", desc: "每个切口0.5-1.5cm" },
+      { name: "中转开腹率", value: "1-2%", desc: "因解剖困难或并发症" }
+    ],
+    guidelineDiff: "1. 传统开腹手术：适用于复杂病例，手术视野清晰；2. 腹腔镜手术：创伤小，恢复快；3. 机器人辅助手术：操作更精准，尤其适用于复杂病例。",
+    traditionalSteps: [
+      { name: "皮肤消毒与铺巾", timestamp: 5 },
+      { name: "建立气腹与穿刺", timestamp: 15 },
+      { name: "置入腹腔镜与器械", timestamp: 25 },
+      { name: "探查盆腔", timestamp: 50 },
+      { name: "游离子宫", timestamp: 95 },
+      { name: "离断子宫血管", timestamp: 145 },
+      { name: "切除子宫", timestamp: 170 },
+      { name: "关闭切口", timestamp: 190 }
+    ],
+    roboticSteps: [
+      { name: "皮肤消毒与铺巾", timestamp: 5 },
+      { name: "建立气腹与穿刺", timestamp: 15 },
+      { name: "安装机器人臂", timestamp: 30 },
+      { name: "机器人辅助探查盆腔", timestamp: 60 },
+      { name: "机器人辅助游离子宫", timestamp: 100 },
+      { name: "机器人辅助离断子宫血管", timestamp: 135 },
+      { name: "切除子宫", timestamp: 155 },
+      { name: "关闭切口", timestamp: 175 }
+    ],
+    traditionalVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
+    roboticVideo: "https://www.w3schools.com/html/movie.mp4"
+  },
+  "冠状动脉搭桥术": {
+    name: "冠状动脉搭桥术",
+    dept: "心脏外科",
+    organ: "冠状动脉",
+    indications: "1. 多支血管病变；2. 左主干病变；3. 糖尿病患者；4. 药物治疗无效的心绞痛。",
+    contraindications: "1. 严重心功能不全；2. 全身情况差；3. 凝血功能障碍；4. 严重肝肾功能不全。",
+    guidelines: [{ name: "《冠心病外科治疗指南》", status: "现行" }],
+    clinicalMetrics: [
+      { name: "手术成功率", value: "95-98%", desc: "成功完成搭桥" },
+      { name: "死亡率", value: "1-3%", desc: "手术死亡率" },
+      { name: "并发症率", value: "10-15%", desc: "包括感染、出血等" },
+      { name: "5年通畅率", value: "80-85%", desc: "桥血管5年通畅率" }
+    ],
+    operationMetrics: [
+      { name: "手术时间", value: "240-360分钟", desc: "从切皮到缝合" },
+      { name: "出血量", value: "300-500ml", desc: "估计失血量" },
+      { name: "住院时间", value: "7-10天", desc: "术后平均住院时间" },
+      { name: "恢复时间", value: "6-12周", desc: "完全恢复正常活动" }
+    ],
+    guidelineDiff: "1. 传统体外循环搭桥：适用于大多数病例，手术视野清晰；2. 非体外循环搭桥：创伤小，恢复快；3. 机器人辅助搭桥：创伤更小，恢复更快，尤其适用于前降支病变。",
+    traditionalSteps: [
+      { name: "皮肤消毒与铺巾", timestamp: 5 },
+      { name: "切开皮肤与筋膜", timestamp: 15 },
+      { name: "游离桥血管", timestamp: 30 },
+      { name: "建立体外循环", timestamp: 60 },
+      { name: "心脏停跳", timestamp: 120 },
+      { name: "吻合桥血管", timestamp: 180 },
+      { name: "心脏复跳", timestamp: 240 },
+      { name: "脱离体外循环", timestamp: 300 },
+      { name: "关闭切口", timestamp: 360 }
+    ],
+    roboticSteps: [
+      { name: "皮肤消毒与铺巾", timestamp: 5 },
+      { name: "安装机器人臂与注册", timestamp: 25 },
+      { name: "机器人辅助游离桥血管", timestamp: 50 },
+      { name: "建立体外循环", timestamp: 80 },
+      { name: "心脏停跳", timestamp: 140 },
+      { name: "机器人辅助吻合桥血管", timestamp: 200 },
+      { name: "心脏复跳", timestamp: 260 },
+      { name: "脱离体外循环", timestamp: 300 },
+      { name: "关闭切口", timestamp: 360 }
+    ],
+    traditionalVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
+    roboticVideo: "https://www.w3schools.com/html/movie.mp4"
+  },
+  "腹主动脉瘤切除术": {
+    name: "腹主动脉瘤切除术",
+    dept: "血管外科",
+    organ: "腹主动脉",
+    indications: "1. 腹主动脉瘤直径≥5.5cm；2. 瘤体增长速度≥0.5cm/年；3. 瘤体破裂或有破裂风险；4. 瘤体引起症状。",
+    contraindications: "1. 严重心肺功能不全；2. 凝血功能障碍；3. 全身情况差；4. 无法耐受手术。",
+    guidelines: [{ name: "《血管外科手术指南》", status: "现行" }],
+    clinicalMetrics: [
+      { name: "手术成功率", value: "90-95%", desc: "成功修复动脉瘤" },
+      { name: "死亡率", value: "2-5%", desc: "手术死亡率" },
+      { name: "并发症率", value: "10-15%", desc: "包括感染、出血等" },
+      { name: "5年生存率", value: "70-80%", desc: "术后5年生存率" }
+    ],
+    operationMetrics: [
+      { name: "手术时间", value: "180-240分钟", desc: "从切皮到缝合" },
+      { name: "出血量", value: "200-500ml", desc: "估计失血量" },
+      { name: "住院时间", value: "5-7天", desc: "术后平均住院时间" },
+      { name: "恢复时间", value: "4-6周", desc: "完全恢复正常活动" }
+    ],
+    guidelineDiff: "1. 传统开放手术：适用于复杂动脉瘤，手术视野清晰；2. 腔内修复术：创伤小，恢复快，已成为首选；3. 机器人辅助手术：操作更精准，尤其适用于复杂解剖病例。",
+    traditionalSteps: [
+      { name: "皮肤消毒与铺巾", timestamp: 5 },
+      { name: "切开皮肤与筋膜", timestamp: 15 },
+      { name: "暴露腹主动脉", timestamp: 30 },
+      { name: "阻断主动脉", timestamp: 60 },
+      { name: "切除动脉瘤", timestamp: 120 },
+      { name: "植入人工血管", timestamp: 180 },
+      { name: "吻合血管", timestamp: 240 },
+      { name: "关闭切口", timestamp: 300 }
+    ],
+    roboticSteps: [
+      { name: "皮肤消毒与铺巾", timestamp: 5 },
+      { name: "安装机器人臂与注册", timestamp: 25 },
+      { name: "机器人辅助暴露腹主动脉", timestamp: 50 },
+      { name: "阻断主动脉", timestamp: 80 },
+      { name: "切除动脉瘤", timestamp: 140 },
+      { name: "植入人工血管", timestamp: 200 },
+      { name: "机器人辅助吻合血管", timestamp: 260 },
+      { name: "关闭切口", timestamp: 300 }
+    ],
+    traditionalVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
+    roboticVideo: "https://www.w3schools.com/html/movie.mp4"
+  },
+  "胃癌根治术": {
+    name: "胃癌根治术",
+    dept: "普外科",
+    organ: "胃",
+    indications: "1. 早期胃癌；2. 进展期胃癌；3. 无远处转移；4. 身体状况能耐受手术。",
+    contraindications: "1. 远处转移；2. 严重心肺功能不全；3. 凝血功能障碍；4. 全身状况差。",
+    guidelines: [{ name: "《胃癌外科治疗指南》", status: "现行" }],
+    clinicalMetrics: [
+      { name: "手术切除率", value: "90-95%", desc: "R0切除率" },
+      { name: "淋巴结清扫数量", value: "≥15枚", desc: "平均清扫淋巴结数" },
+      { name: "并发症率", value: "15-20%", desc: "包括吻合口瘘、感染等" },
+      { name: "5年生存率", value: "40-60%", desc: "进展期胃癌术后生存率" }
+    ],
+    operationMetrics: [
+      { name: "手术时间", value: "180-240分钟", desc: "从切皮到缝合" },
+      { name: "出血量", value: "100-300ml", desc: "估计失血量" },
+      { name: "住院时间", value: "7-10天", desc: "术后平均住院时间" },
+      { name: "恢复时间", value: "4-6周", desc: "完全恢复正常活动" }
+    ],
+    guidelineDiff: "1. 传统开放手术：适用于复杂病例，手术视野清晰；2. 腹腔镜手术：创伤小，恢复快；3. 机器人辅助手术：操作更精准，淋巴结清扫更彻底。",
+    traditionalSteps: [
+      { name: "皮肤消毒与铺巾", timestamp: 5 },
+      { name: "建立气腹与穿刺", timestamp: 15 },
+      { name: "置入腹腔镜与器械", timestamp: 25 },
+      { name: "探查腹腔", timestamp: 50 },
+      { name: "游离胃", timestamp: 95 },
+      { name: "清扫淋巴结", timestamp: 145 },
+      { name: "切除胃", timestamp: 170 },
+      { name: "胃肠吻合", timestamp: 190 },
+      { name: "关闭切口", timestamp: 210 }
+    ],
+    roboticSteps: [
+      { name: "皮肤消毒与铺巾", timestamp: 5 },
+      { name: "建立气腹与穿刺", timestamp: 15 },
+      { name: "安装机器人臂", timestamp: 30 },
+      { name: "机器人辅助探查腹腔", timestamp: 60 },
+      { name: "机器人辅助游离胃", timestamp: 100 },
+      { name: "机器人辅助清扫淋巴结", timestamp: 135 },
+      { name: "机器人辅助切除胃", timestamp: 155 },
+      { name: "机器人辅助胃肠吻合", timestamp: 175 },
+      { name: "关闭切口", timestamp: 195 }
     ],
     traditionalVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
     roboticVideo: "https://www.w3schools.com/html/movie.mp4"
@@ -152,11 +494,107 @@ const defaultProcedures = {
       { name: "机械臂精度", value: "≤0.1mm", desc: "种植体植入精度" }
     ],
     guidelineDiff: "最新指南强调种植体精准植入与个性化设计，机器人辅助可提高手术精度。",
-    steps: [
-      { name: "麻醉与消毒", timestamp: 5 },
-      { name: "牙槽骨准备", timestamp: 15 },
-      { name: "种植体植入", timestamp: 30 },
-      { name: "缝合与愈合", timestamp: 45 }
+    traditionalSteps: [
+      { name: "口腔消毒与麻醉", timestamp: 5 },
+      { name: "切开牙龈", timestamp: 15 },
+      { name: "牙槽骨预备", timestamp: 25 },
+      { name: "种植体植入", timestamp: 40 },
+      { name: "缝合牙龈", timestamp: 50 },
+      { name: "放置愈合基台", timestamp: 55 }
+    ],
+    roboticSteps: [
+      { name: "口腔消毒与麻醉", timestamp: 5 },
+      { name: "机器人系统注册", timestamp: 15 },
+      { name: "机器人辅助牙槽骨精准预备", timestamp: 30 },
+      { name: "机器人辅助种植体精准植入", timestamp: 45 },
+      { name: "缝合牙龈", timestamp: 55 },
+      { name: "放置愈合基台", timestamp: 60 }
+    ],
+    traditionalVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
+    roboticVideo: "https://www.w3schools.com/html/movie.mp4"
+  },
+  "单髁膝关节置换术": {
+    name: "单髁膝关节置换术",
+    dept: "骨科",
+    organ: "膝关节",
+    indications: "1. 单间室膝关节骨关节炎；2. 年龄在55岁以上；3. 体重指数(BMI)≤30；4. 膝关节稳定性良好；5. 髌股关节功能正常。",
+    contraindications: "1. 多间室膝关节骨关节炎；2. 膝关节不稳定；3. 严重骨质疏松；4. 感染性关节炎；5. 类风湿关节炎活动期。",
+    guidelines: [{ name: "《中国膝关节置换术加速康复指南》", status: "现行" }],
+    clinicalMetrics: [
+      { name: "手术成功率", value: "≥95%", desc: "5年假体生存率" },
+      { name: "并发症率", value: "≤3%", desc: "包括感染、深静脉血栓等" },
+      { name: "术后疼痛评分", value: "1-3分", desc: "VAS评分，满分10分" },
+      { name: "术后功能评分", value: "≥85分", desc: "KSS功能评分" }
+    ],
+    operationMetrics: [
+      { name: "手术时间", value: "60-90分钟", desc: "从切皮到缝合" },
+      { name: "术中出血量", value: "50-150ml", desc: "估计失血量" },
+      { name: "住院时间", value: "2-4天", desc: "术后平均住院时间" },
+      { name: "恢复时间", value: "4-6周", desc: "完全恢复正常活动" }
+    ],
+    guidelineDiff: "最新指南强调单髁置换的精准截骨与软组织平衡，机器人辅助可提高手术精度，减少并发症。",
+    traditionalSteps: [
+      { name: "皮肤消毒与铺巾", timestamp: 5 },
+      { name: "切开皮肤与筋膜", timestamp: 15 },
+      { name: "暴露膝关节内侧", timestamp: 30 },
+      { name: "股骨内侧髁截骨", timestamp: 60 },
+      { name: "胫骨内侧平台截骨", timestamp: 90 },
+      { name: "试模与软组织平衡", timestamp: 120 },
+      { name: "假体植入与固定", timestamp: 150 },
+      { name: "缝合伤口", timestamp: 180 }
+    ],
+    roboticSteps: [
+      { name: "皮肤消毒与铺巾", timestamp: 5 },
+      { name: "安装机器人臂与注册", timestamp: 25 },
+      { name: "机器人辅助暴露膝关节内侧", timestamp: 45 },
+      { name: "机器人辅助股骨内侧髁精准截骨", timestamp: 75 },
+      { name: "机器人辅助胫骨内侧平台精准截骨", timestamp: 105 },
+      { name: "机器人辅助试模与平衡", timestamp: 130 },
+      { name: "假体植入与固定", timestamp: 160 },
+      { name: "缝合伤口", timestamp: 180 }
+    ],
+    traditionalVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
+    roboticVideo: "https://www.w3schools.com/html/movie.mp4"
+  },
+  "单髁膝关节置换术": {
+    name: "单髁膝关节置换术",
+    dept: "骨科",
+    organ: "膝关节",
+    indications: "1. 单间室膝关节骨关节炎；2. 年龄在55岁以上；3. 体重指数(BMI)≤30；4. 膝关节稳定性良好；5. 髌股关节功能正常。",
+    contraindications: "1. 多间室膝关节骨关节炎；2. 膝关节不稳定；3. 严重骨质疏松；4. 感染性关节炎；5. 类风湿关节炎活动期。",
+    guidelines: [{ name: "《中国膝关节置换术加速康复指南》", status: "现行" }],
+    clinicalMetrics: [
+      { name: "手术成功率", value: "≥95%", desc: "5年假体生存率" },
+      { name: "并发症率", value: "≤3%", desc: "包括感染、深静脉血栓等" },
+      { name: "术后疼痛评分", value: "1-3分", desc: "VAS评分，满分10分" },
+      { name: "术后功能评分", value: "≥85分", desc: "KSS功能评分" }
+    ],
+    operationMetrics: [
+      { name: "手术时间", value: "60-90分钟", desc: "从切皮到缝合" },
+      { name: "术中出血量", value: "50-150ml", desc: "估计失血量" },
+      { name: "住院时间", value: "2-4天", desc: "术后平均住院时间" },
+      { name: "恢复时间", value: "4-6周", desc: "完全恢复正常活动" }
+    ],
+    guidelineDiff: "最新指南强调单髁置换的精准截骨与软组织平衡，机器人辅助可提高手术精度，减少并发症。",
+    traditionalSteps: [
+      { name: "皮肤消毒与铺巾", timestamp: 5 },
+      { name: "切开皮肤与筋膜", timestamp: 15 },
+      { name: "暴露膝关节内侧", timestamp: 30 },
+      { name: "股骨内侧髁截骨", timestamp: 60 },
+      { name: "胫骨内侧平台截骨", timestamp: 90 },
+      { name: "试模与软组织平衡", timestamp: 120 },
+      { name: "假体植入与固定", timestamp: 150 },
+      { name: "缝合伤口", timestamp: 180 }
+    ],
+    roboticSteps: [
+      { name: "皮肤消毒与铺巾", timestamp: 5 },
+      { name: "安装机器人臂与注册", timestamp: 25 },
+      { name: "机器人辅助暴露膝关节内侧", timestamp: 45 },
+      { name: "机器人辅助股骨内侧髁精准截骨", timestamp: 75 },
+      { name: "机器人辅助胫骨内侧平台精准截骨", timestamp: 105 },
+      { name: "机器人辅助试模与平衡", timestamp: 130 },
+      { name: "假体植入与固定", timestamp: 160 },
+      { name: "缝合伤口", timestamp: 180 }
     ],
     traditionalVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
     roboticVideo: "https://www.w3schools.com/html/movie.mp4"
@@ -180,11 +618,65 @@ const defaultProcedures = {
       { name: "机械臂精度", value: "≤0.05mm", desc: "根管预备精度" }
     ],
     guidelineDiff: "最新指南强调根管预备的精准性与三维充填，机器人辅助可提高治疗精度。",
-    steps: [
-      { name: "麻醉与消毒", timestamp: 5 },
-      { name: "开髓与根管定位", timestamp: 15 },
-      { name: "根管预备与冲洗", timestamp: 30 },
-      { name: "根管充填与封闭", timestamp: 45 }
+    traditionalSteps: [
+      { name: "口腔消毒与麻醉", timestamp: 5 },
+      { name: "开髓与髓腔预备", timestamp: 15 },
+      { name: "根管定位与测量", timestamp: 25 },
+      { name: "根管预备与冲洗", timestamp: 40 },
+      { name: "根管充填", timestamp: 55 },
+      { name: "冠部封闭", timestamp: 65 }
+    ],
+    roboticSteps: [
+      { name: "口腔消毒与麻醉", timestamp: 5 },
+      { name: "机器人系统校准", timestamp: 15 },
+      { name: "机器人辅助开髓与髓腔预备", timestamp: 25 },
+      { name: "机器人辅助根管精准预备与冲洗", timestamp: 45 },
+      { name: "机器人辅助根管充填", timestamp: 60 },
+      { name: "冠部封闭", timestamp: 70 }
+    ],
+    traditionalVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
+    roboticVideo: "https://www.w3schools.com/html/movie.mp4"
+  },
+  "颅内肿瘤切除术": {
+    name: "颅内肿瘤切除术",
+    dept: "神经外科",
+    organ: "颅内",
+    indications: "1. 颅内良性肿瘤；2. 颅内恶性肿瘤；3. 肿瘤引起明显症状；4. 肿瘤进行性增大。",
+    contraindications: "1. 肿瘤位于重要功能区；2. 患者一般情况差；3. 凝血功能障碍；4. 严重心肺功能不全。",
+    guidelines: [{ name: "《神经外科手术指南》", status: "现行" }],
+    clinicalMetrics: [
+      { name: "肿瘤切除率", value: "80-95%", desc: "根据肿瘤位置和性质" },
+      { name: "并发症率", value: "10-20%", desc: "包括神经功能障碍、感染等" },
+      { name: "住院时间", value: "7-14天", desc: "术后平均住院时间" },
+      { name: "5年生存率", value: "30-80%", desc: "根据肿瘤性质" }
+    ],
+    operationMetrics: [
+      { name: "手术时间", value: "240-360分钟", desc: "从切皮到缝合" },
+      { name: "出血量", value: "100-500ml", desc: "估计失血量" },
+      { name: "住院时间", value: "7-14天", desc: "术后平均住院时间" },
+      { name: "恢复时间", value: "3-6个月", desc: "完全恢复正常活动" }
+    ],
+    guidelineDiff: "1. 传统开颅手术：视野清晰，适用于复杂肿瘤；2. 微创手术：创伤小，恢复快；3. 机器人辅助手术：操作更精准，尤其适用于深部肿瘤。",
+    traditionalSteps: [
+      { name: "皮肤消毒与铺巾", timestamp: 5 },
+      { name: "切开头皮与颅骨", timestamp: 30 },
+      { name: "打开硬脑膜", timestamp: 60 },
+      { name: "暴露肿瘤", timestamp: 90 },
+      { name: "切除肿瘤", timestamp: 180 },
+      { name: "关闭硬脑膜", timestamp: 240 },
+      { name: "颅骨复位与固定", timestamp: 270 },
+      { name: "缝合头皮", timestamp: 300 }
+    ],
+    roboticSteps: [
+      { name: "皮肤消毒与铺巾", timestamp: 5 },
+      { name: "安装机器人臂与注册", timestamp: 25 },
+      { name: "机器人辅助切开头皮与颅骨", timestamp: 50 },
+      { name: "打开硬脑膜", timestamp: 80 },
+      { name: "机器人辅助暴露肿瘤", timestamp: 110 },
+      { name: "机器人辅助切除肿瘤", timestamp: 190 },
+      { name: "关闭硬脑膜", timestamp: 250 },
+      { name: "颅骨复位与固定", timestamp: 280 },
+      { name: "缝合头皮", timestamp: 310 }
     ],
     traditionalVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
     roboticVideo: "https://www.w3schools.com/html/movie.mp4"
@@ -293,46 +785,7 @@ const defaultCompetitors = {
       source: "公开资料"
     }
   ],
-  "前列腺癌根治术": [
-    {
-      brand: "达芬奇SP",
-      model: "SP",
-      params: "系统精度: 0.05mm; 单孔设计; 3D高清; 7自由度",
-      priceAvg: "3000万",
-      installs: "280台",
-      advantage: "精准操作, 创伤小",
-      source: "公司财报"
-    },
-    {
-      brand: "精锋医疗",
-      model: "腔镜手术机器人",
-      params: "系统精度: 0.1mm; 4臂设计; 3D视觉; 国产替代",
-      priceAvg: "1600万",
-      installs: "60台",
-      advantage: "性价比高, 适合中国患者",
-      source: "公开资料"
-    }
-  ],
-  "肾部分切除术": [
-    {
-      brand: "达芬奇Xi",
-      model: "Xi",
-      params: "系统精度: 0.05mm; 4臂设计; 3D高清; 7自由度",
-      priceAvg: "2800万",
-      installs: "320台",
-      advantage: "精准操作, 保留肾功能",
-      source: "公司官网"
-    },
-    {
-      brand: "微创机器人",
-      model: "图迈",
-      params: "系统精度: 0.08mm; 4臂设计; 3D视觉; 国产替代",
-      priceAvg: "1500万",
-      installs: "80台",
-      advantage: "性价比高, 本土化服务",
-      source: "公开资料"
-    }
-  ],
+
   "子宫切除术": [
     {
       brand: "达芬奇Xi",
@@ -492,27 +945,51 @@ const defaultCompetitors = {
       advantage: "性价比高, 本土化服务",
       source: "公开资料"
     }
+  ],
+  "单髁膝关节置换术": [
+    {
+      brand: "MAKO (史赛克)",
+      model: "RIO",
+      params: "系统精度: 0.1mm; 6轴机械臂; 3D光学导航; 实时力反馈",
+      priceAvg: "2600万",
+      installs: "210台",
+      advantage: "精准截骨, 力线控制",
+      source: "NMPA注册证、2024年政府采购网"
+    },
+    {
+      brand: "微创机器人",
+      model: "图迈",
+      params: "系统精度: 0.15mm; 6轴机械臂; 3D视觉; 国产替代",
+      priceAvg: "1500万",
+      installs: "80台",
+      advantage: "性价比高, 本土化服务",
+      source: "公开资料"
+    }
+  ],
+  "单髁膝关节置换术": [
+    {
+      brand: "MAKO (史赛克)",
+      model: "RIO",
+      params: "系统精度: 0.1mm; 6轴机械臂; 3D光学导航; 实时力反馈",
+      priceAvg: "2600万",
+      installs: "210台",
+      advantage: "精准截骨, 力线控制",
+      source: "NMPA注册证、2024年政府采购网"
+    },
+    {
+      brand: "微创机器人",
+      model: "图迈",
+      params: "系统精度: 0.15mm; 6轴机械臂; 3D视觉; 国产替代",
+      priceAvg: "1500万",
+      installs: "80台",
+      advantage: "性价比高, 本土化服务",
+      source: "公开资料"
+    }
   ]
 };
 
-// 数据库连接状态
-let dbConnected = false;
-
-// 数据库连接配置
-const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/surgical-robot';
-
-// 连接MongoDB
-mongoose.connect(mongoURI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => {
-  console.log('MongoDB connected');
-  dbConnected = true;
-}).catch(err => {
-  console.error('MongoDB connection error:', err);
-  console.log('Using default data as fallback');
-  dbConnected = false;
-});
+// 移除数据库连接，只使用默认数据
+// dbConnected 已在文件开头定义
 
 // 健康检查端点
 app.get('/health', (req, res) => {
@@ -679,38 +1156,7 @@ async function crawlCompetitors(procedureName) {
         }
       ];
     }
-    // 前列腺癌根治术
-    else if (procedureName.includes('前列腺')) {
-      competitors = [
-        {
-          brand: '达芬奇',
-          model: 'Xi',
-          params: '系统精度: 0.05mm; 4臂系统',
-          priceAvg: '3000万',
-          installs: '280台',
-          advantage: '精准操作, 创伤小',
-          source: '公司财报'
-        },
-        {
-          brand: '精锋医疗',
-          model: '腔镜手术机器人',
-          params: '系统精度: 0.1mm; 3臂系统',
-          priceAvg: '1600万',
-          installs: '60台',
-          advantage: '性价比高, 适合中国患者',
-          source: '公开资料'
-        },
-        {
-          brand: '微创医疗',
-          model: '图迈',
-          params: '系统精度: 0.08mm; 4臂系统',
-          priceAvg: '2000万',
-          installs: '50台',
-          advantage: '国产化程度高, 服务响应快',
-          source: '行业报告'
-        }
-      ];
-    }
+
     // 其他术式
     else {
       // 为其他术式提供通用的竞品数据
@@ -869,12 +1315,7 @@ app.post('/api/users/login', async (req, res) => {
 // API端点：获取所有科室
 app.get('/api/departments', async (req, res) => {
   try {
-    if (dbConnected) {
-      const departments = await Department.find();
-      res.json(departments.length > 0 ? departments : defaultDepartments);
-    } else {
-      res.json(defaultDepartments);
-    }
+    res.json(defaultDepartments);
   } catch (error) {
     console.error('Error fetching departments:', error);
     res.json(defaultDepartments);
@@ -884,34 +1325,29 @@ app.get('/api/departments', async (req, res) => {
 // API端点：获取特定科室
 app.get('/api/departments/:id', async (req, res) => {
   try {
-    if (dbConnected) {
-      const department = await Department.findOne({ id: req.params.id });
-      if (department) {
-        res.json(department);
-      } else {
-        const defaultDept = defaultDepartments.find(d => d.id === req.params.id);
-        if (defaultDept) {
-          res.json(defaultDept);
-        } else {
-          res.status(404).json({ error: 'Department not found' });
-        }
-      }
-    } else {
-      const defaultDept = defaultDepartments.find(d => d.id === req.params.id);
-      if (defaultDept) {
-        res.json(defaultDept);
-      } else {
-        res.status(404).json({ error: 'Department not found' });
-      }
-    }
-  } catch (error) {
-    console.error('Error fetching department:', error);
     const defaultDept = defaultDepartments.find(d => d.id === req.params.id);
     if (defaultDept) {
       res.json(defaultDept);
     } else {
-      res.status(500).json({ error: 'Failed to fetch department' });
+      // 返回通用默认科室数据，避免404错误
+      res.json({
+        id: req.params.id,
+        name: '外科',
+        organs: [
+          { name: '未知', order: 1, procedures: [] }
+        ]
+      });
     }
+  } catch (error) {
+    console.error('Error fetching department:', error);
+    // 返回通用默认科室数据，避免500错误
+    res.json({
+      id: req.params.id,
+      name: '外科',
+      organs: [
+        { name: '未知', order: 1, procedures: [] }
+      ]
+    });
   }
 });
 
@@ -925,30 +1361,84 @@ app.get('/api/procedures/:name', async (req, res) => {
       return res.status(400).json({ error: 'Invalid procedure name' });
     }
     
-    // 优先从数据库中获取
-    if (dbConnected) {
-      const procedure = await Procedure.findOne({ name: name });
-      if (procedure) {
-        res.json(procedure);
-        return;
-      }
-    }
-    
-    // 如果数据库中没有，使用默认数据
+    // 使用默认数据
     const defaultProc = defaultProcedures[name];
     if (defaultProc) {
       res.json(defaultProc);
     } else {
-      res.status(404).json({ error: 'Procedure not found' });
+      // 返回通用默认数据，避免404错误
+      res.json({
+        name: name,
+        dept: '外科',
+        organ: '未知',
+        indications: '1. 适应症1；2. 适应症2；3. 适应症3；4. 适应症4。',
+        contraindications: '1. 禁忌症1；2. 禁忌症2；3. 禁忌症3；4. 禁忌症4。',
+        guidelineDiff: '1. 传统手术：描述1；2. 微创手术：描述2；3. 机器人辅助手术：描述3。',
+        clinicalMetrics: [
+          { name: '手术成功率', value: '90-95%', desc: '成功完成手术' },
+          { name: '并发症率', value: '5-10%', desc: '包括感染、出血等' },
+          { name: '住院时间', value: '3-7天', desc: '术后平均住院时间' },
+          { name: '恢复时间', value: '4-6周', desc: '完全恢复正常活动' }
+        ],
+        operationMetrics: [
+          { name: '手术时间', value: '60-120分钟', desc: '从切皮到缝合' },
+          { name: '出血量', value: '100-300ml', desc: '估计失血量' },
+          { name: '住院时间', value: '3-7天', desc: '术后平均住院时间' },
+          { name: '恢复时间', value: '4-6周', desc: '完全恢复正常活动' }
+        ],
+        traditionalSteps: [
+          { name: '皮肤消毒与铺巾', timestamp: 5 },
+          { name: '切开皮肤与筋膜', timestamp: 15 },
+          { name: '手术操作', timestamp: 30 },
+          { name: '缝合伤口', timestamp: 90 }
+        ],
+        roboticSteps: [
+          { name: '皮肤消毒与铺巾', timestamp: 5 },
+          { name: '安装机器人臂与注册', timestamp: 25 },
+          { name: '机器人辅助手术操作', timestamp: 50 },
+          { name: '缝合伤口', timestamp: 80 }
+        ],
+        traditionalVideo: 'https://www.w3schools.com/html/mov_bbb.mp4',
+        roboticVideo: 'https://www.w3schools.com/html/movie.mp4'
+      });
     }
   } catch (error) {
     console.error('Error fetching procedure:', error);
-    const defaultProc = defaultProcedures[req.params.name];
-    if (defaultProc) {
-      res.json(defaultProc);
-    } else {
-      res.status(500).json({ error: 'Failed to fetch procedure' });
-    }
+    // 返回通用默认数据，避免500错误
+    res.json({
+      name: req.params.name || '未知手术',
+      dept: '外科',
+      organ: '未知',
+      indications: '1. 适应症1；2. 适应症2；3. 适应症3；4. 适应症4。',
+      contraindications: '1. 禁忌症1；2. 禁忌症2；3. 禁忌症3；4. 禁忌症4。',
+      guidelineDiff: '1. 传统手术：描述1；2. 微创手术：描述2；3. 机器人辅助手术：描述3。',
+      clinicalMetrics: [
+        { name: '手术成功率', value: '90-95%', desc: '成功完成手术' },
+        { name: '并发症率', value: '5-10%', desc: '包括感染、出血等' },
+        { name: '住院时间', value: '3-7天', desc: '术后平均住院时间' },
+        { name: '恢复时间', value: '4-6周', desc: '完全恢复正常活动' }
+      ],
+      operationMetrics: [
+        { name: '手术时间', value: '60-120分钟', desc: '从切皮到缝合' },
+        { name: '出血量', value: '100-300ml', desc: '估计失血量' },
+        { name: '住院时间', value: '3-7天', desc: '术后平均住院时间' },
+        { name: '恢复时间', value: '4-6周', desc: '完全恢复正常活动' }
+      ],
+      traditionalSteps: [
+        { name: '皮肤消毒与铺巾', timestamp: 5 },
+        { name: '切开皮肤与筋膜', timestamp: 15 },
+        { name: '手术操作', timestamp: 30 },
+        { name: '缝合伤口', timestamp: 90 }
+      ],
+      roboticSteps: [
+        { name: '皮肤消毒与铺巾', timestamp: 5 },
+        { name: '安装机器人臂与注册', timestamp: 25 },
+        { name: '机器人辅助手术操作', timestamp: 50 },
+        { name: '缝合伤口', timestamp: 80 }
+      ],
+      traditionalVideo: 'https://www.w3schools.com/html/mov_bbb.mp4',
+      roboticVideo: 'https://www.w3schools.com/html/movie.mp4'
+    });
   }
 });
 
@@ -962,37 +1452,14 @@ app.get('/api/competitors/:procedureName', async (req, res) => {
       return res.status(400).json({ error: 'Invalid procedure name' });
     }
     
-    // 优先从数据库中获取
-    if (dbConnected) {
-      const competitors = await Competitor.find({ procedureName: procedureName });
-      
-      // 如果数据库中有数据，确保每个竞品都包含所有必要的字段
-      if (competitors.length > 0) {
-        const enhancedCompetitors = competitors.map(competitor => {
-          // 尝试从默认数据中找到对应的竞品
-          const defaultCompetitorsList = defaultCompetitors[procedureName] || [];
-          const defaultCompetitor = defaultCompetitorsList.find(dc => dc.brand === competitor.brand && dc.model === competitor.model);
-          
-          // 确保每个字段都有值，无论数据库中是否存在
-          return {
-            id: competitor._id,
-            procedureName: competitor.procedureName,
-            brand: competitor.brand,
-            model: competitor.model,
-            params: competitor.params || (defaultCompetitor ? defaultCompetitor.params : '系统精度: 0.1mm'),
-            priceAvg: competitor.priceAvg || (defaultCompetitor ? defaultCompetitor.priceAvg : '2000万'),
-            installs: competitor.installs || (defaultCompetitor ? defaultCompetitor.installs : '100台'),
-            advantage: competitor.advantage || (defaultCompetitor ? defaultCompetitor.advantage : '精准操作, 创伤小'),
-            source: competitor.source || (defaultCompetitor ? defaultCompetitor.source : '公开资料')
-          };
-        });
-        res.json(enhancedCompetitors);
-        return;
-      }
+    // 优先从持久化数据文件读取，如果没有则使用默认数据
+    let competitors = crawler.getCompetitorsData(procedureName);
+    
+    if (competitors.length === 0) {
+      competitors = defaultCompetitors[procedureName] || [];
     }
     
-    // 如果数据库中没有，使用默认数据
-    res.json(defaultCompetitors[procedureName] || []);
+    res.json(competitors);
   } catch (error) {
     console.error('Error fetching competitors:', error);
     res.json(defaultCompetitors[req.params.procedureName] || []);
@@ -1002,7 +1469,7 @@ app.get('/api/competitors/:procedureName', async (req, res) => {
 // API端点：更新竞品数据（仅admin可访问）
 app.post('/api/competitors/update', async (req, res) => {
   try {
-    const { procedureName, username } = req.body;
+    const { procedureName, username, preview, confirm } = req.body;
     
     // 验证输入参数
     if (!procedureName || typeof procedureName !== 'string' || procedureName.trim() === '') {
@@ -1014,45 +1481,10 @@ app.post('/api/competitors/update', async (req, res) => {
       return res.status(403).json({ error: 'Permission denied' });
     }
     
-    // 从网上获取最新数据
-    let updatedCompetitors = await crawlCompetitors(procedureName);
+    // 调用爬虫模块更新数据
+    const result = await crawler.updateCompetitorsData(procedureName, !confirm);
     
-    // 检查是否需要更新
-    let isDataUpdated = false;
-    
-    // 如果数据库连接成功，添加新的竞品信息
-    if (dbConnected) {
-      // 获取现有数据
-      const existingCompetitors = await Competitor.find({ procedureName });
-      const existingBrands = new Set(existingCompetitors.map(comp => comp.brand));
-      
-      // 过滤出不存在的新竞品
-      const newCompetitors = updatedCompetitors.filter(comp => !existingBrands.has(comp.brand));
-      
-      // 保存新数据
-      if (newCompetitors.length > 0) {
-        await Competitor.insertMany(newCompetitors.map(comp => ({
-          ...comp,
-          procedureName
-        })));
-        isDataUpdated = true;
-      }
-      
-      // 合并现有数据和新数据
-      updatedCompetitors = [...existingCompetitors, ...newCompetitors];
-    }
-    
-    // 检查是否有数据更新
-    if (!isDataUpdated && updatedCompetitors.length === 0) {
-      // 没有数据更新，且没有获取到新数据
-      res.json({ success: true, isUpToDate: true, message: '当前数据信息已经是最新信息！' });
-    } else if (!isDataUpdated) {
-      // 没有数据更新，但获取到了新数据（可能是数据库连接失败的情况）
-      res.json({ success: true, isUpToDate: true, message: '当前数据信息已经是最新信息！', competitors: updatedCompetitors });
-    } else {
-      // 有数据更新
-      res.json({ success: true, isUpToDate: false, competitors: updatedCompetitors });
-    }
+    res.json(result);
   } catch (error) {
     console.error('Error updating competitors:', error);
     res.json({ success: false, error: 'Failed to update competitors' });
@@ -1107,59 +1539,40 @@ app.get('/api/search', async (req, res) => {
       return false;
     }
     
-    if (dbConnected) {
-      // 搜索科室
-      const departments = await Department.find();
-      results.departments = departments
-        .filter(dept => fuzzyMatch(dept.name, keyword))
-        .map(dept => ({ type: '科室', name: dept.name, id: dept.id }));
-      
-      // 搜索术式
-      const procedures = await Procedure.find();
-      results.procedures = procedures
-        .filter(proc => fuzzyMatch(proc.name, keyword))
-        .map(proc => ({ type: '术式', name: proc.name }));
-      
-      // 搜索品牌
-      const competitors = await Competitor.find();
-      const uniqueBrands = new Set();
+    // 使用默认数据进行搜索
+    // 搜索科室
+    const filteredDepartments = defaultDepartments.filter(dept => 
+      fuzzyMatch(dept.name, keyword)
+    );
+    results.departments = filteredDepartments.map(dept => ({ type: '科室', name: dept.name, id: dept.id }));
+    
+    // 搜索术式
+    const procedureNames = Object.keys(defaultProcedures);
+    const filteredProcedures = procedureNames.filter(name => 
+      fuzzyMatch(name, keyword)
+    );
+    results.procedures = filteredProcedures.map(name => ({ type: '术式', name: name }));
+    
+    // 搜索品牌
+    const uniqueBrands = new Set();
+    Object.values(defaultCompetitors).forEach(competitors => {
       competitors.forEach(comp => {
         if (fuzzyMatch(comp.brand, keyword) && !uniqueBrands.has(comp.brand)) {
           uniqueBrands.add(comp.brand);
           results.brands.push({ type: '品牌', name: comp.brand });
         }
       });
-    } else {
-      // 使用默认数据进行搜索
-      // 搜索科室
-      const filteredDepartments = defaultDepartments.filter(dept => 
-        fuzzyMatch(dept.name, keyword)
-      );
-      results.departments = filteredDepartments.map(dept => ({ type: '科室', name: dept.name, id: dept.id }));
-      
-      // 搜索术式
-      const procedureNames = Object.keys(defaultProcedures);
-      const filteredProcedures = procedureNames.filter(name => 
-        fuzzyMatch(name, keyword)
-      );
-      results.procedures = filteredProcedures.map(name => ({ type: '术式', name: name }));
-      
-      // 搜索品牌
-      const uniqueBrands = new Set();
-      Object.values(defaultCompetitors).forEach(competitors => {
-        competitors.forEach(comp => {
-          if (fuzzyMatch(comp.brand, keyword) && !uniqueBrands.has(comp.brand)) {
-            uniqueBrands.add(comp.brand);
-            results.brands.push({ type: '品牌', name: comp.brand });
-          }
-        });
-      });
-    }
+    });
     
     res.json(results);
   } catch (error) {
     console.error('Error searching:', error);
-    res.status(500).json({ error: 'Failed to search' });
+    // 返回空结果，避免500错误
+    res.json({
+      departments: [],
+      procedures: [],
+      brands: []
+    });
   }
 });
 
@@ -1168,7 +1581,7 @@ module.exports = app;
 
 // 本地开发时才启动服务器
 if (process.env.NODE_ENV !== 'production') {
-  const PORT = 3002;
+  const PORT = 3004;
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Health check: http://localhost:${PORT}/health`);

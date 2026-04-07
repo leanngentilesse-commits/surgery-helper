@@ -1,0 +1,53 @@
+{
+  "lastUpdate": "2026-04-06T06:39:17.110Z",
+  "procedures": {
+    "全膝关节置换术": [
+      {
+        "brand": "史赛克MAKO",
+        "model": "RIO",
+        "params": "系统精度: 0.1mm; 6轴机械臂; 3D光学导航; 实时力反馈",
+        "priceAvg": "2600万",
+        "installs": "210台",
+        "advantage": "精准截骨, 力线控制",
+        "source": "史赛克MAKO官网",
+        "sourceUrl": "https://www.stryker.com/us/en/portfolios/medsurg/robotic-assisted-surgery.html",
+        "updateTime": "2026-04-06T12:22:28.000Z"
+      },
+      {
+        "brand": "微创机器人",
+        "model": "图迈",
+        "params": "系统精度: 0.15mm; 4臂设计; 3D高清视觉; 国产替代",
+        "priceAvg": "1500万",
+        "installs": "80台",
+        "advantage": "国产替代, 性价比高",
+        "source": "微创机器人官网",
+        "sourceUrl": "https://www.microport.com/",
+        "updateTime": "2026-04-06T12:22:28.000Z"
+      },
+      {
+        "brand": "微创机器人",
+        "model": "未知型号",
+        "params": "公司官网数据",
+        "priceAvg": "官网询价",
+        "installs": "官网数据",
+        "advantage": "国产替代, 性价比高",
+        "source": "微创机器人官网",
+        "sourceUrl": "https://www.microport.com/",
+        "updateTime": "2026-04-06T06:12:12.110Z"
+      }
+    ],
+    "全髋关节置换术": [
+      {
+        "brand": "天玑",
+        "model": "未知型号",
+        "params": "公司官网数据",
+        "priceAvg": "官网询价",
+        "installs": "官网数据",
+        "advantage": "国产骨科机器人",
+        "source": "天玑官网",
+        "sourceUrl": "https://www.tinavi.com/",
+        "updateTime": "2026-04-06T06:39:17.110Z"
+      }
+    ]
+  }
+}

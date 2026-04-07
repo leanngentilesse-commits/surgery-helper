@@ -194,19 +194,20 @@
         
         @media (max-width: 480px) {
             #mainMenu {
-                grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+                grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
                 gap: 8px;
             }
             
             .menu-item {
                 padding: 6px 0;
                 font-size: 12px;
-                width: 80px;
+                width: 100%;
+                max-width: 80px;
                 border-radius: 15px;
             }
             
             #searchInput {
-                width: 200px;
+                width: 100%;
                 padding: 8px;
                 font-size: 12px;
             }
@@ -214,6 +215,115 @@
             #searchBtn {
                 padding: 8px 16px;
                 font-size: 12px;
+                margin-left: 0;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            #mainMenu {
+                grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+                gap: 6px;
+            }
+            
+            .menu-item {
+                padding: 5px 0;
+                font-size: 11px;
+                max-width: 70px;
+                border-radius: 12px;
+            }
+            
+            h1 {
+                font-size: 20px;
+            }
+            
+            .submenu-title {
+                font-size: 16px;
+            }
+        }
+        
+        @media (max-width: 320px) {
+            #mainMenu {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 5px;
+            }
+            
+            .menu-item {
+                padding: 4px 0;
+                font-size: 10px;
+                max-width: none;
+                border-radius: 10px;
+            }
+            
+            h1 {
+                font-size: 18px;
+            }
+        }
+        
+        /* 术式详情页面响应式调整 */
+        @media (max-width: 768px) {
+            #procedurePage .container {
+                padding: 20px;
+            }
+            
+            #backBtn {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+            
+            #procedureTitle {
+                font-size: 24px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            #procedurePage .container {
+                padding: 15px;
+            }
+            
+            #backBtn {
+                padding: 8px 16px;
+                font-size: 12px;
+            }
+            
+            #procedureTitle {
+                font-size: 20px;
+            }
+            
+            .nav-btn {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            #backBtn {
+                padding: 6px 12px;
+                font-size: 11px;
+            }
+            
+            #procedureTitle {
+                font-size: 18px;
+            }
+            
+            .nav-btn {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+        }
+        
+        @media (max-width: 320px) {
+            #backBtn {
+                padding: 5px 10px;
+                font-size: 10px;
+            }
+            
+            #procedureTitle {
+                font-size: 16px;
+            }
+            
+            .nav-btn {
+                padding: 6px 10px;
+                font-size: 11px;
             }
         }
         
@@ -895,7 +1005,7 @@
         <div class="container" style="max-width: 1400px; padding: 30px;">
             <!-- 顶部导航 -->
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 40px;">
-                <button id="backBtn" style="background: #1E4A76; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                <button id="backBtn" style="background: #1E4A76; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px; white-space: nowrap;">
                     ← 返回科室选择
                 </button>
                 <h1 id="procedureTitle" style="color: #1E4A76; font-size: 32px; margin: 0;">术式详情</h1>
@@ -1022,6 +1132,9 @@
         </div>
     </div>
     
+    <!-- 通知弹窗 -->
+    <div id="notification" style="position: fixed; top: 20px; right: 20px; padding: 16px 24px; border-radius: 8px; color: white; font-weight: bold; z-index: 1000; opacity: 0; transform: translateX(100%); transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.2);"></div>
+    
     <style>
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
@@ -1049,11 +1162,29 @@
             background: linear-gradient(135deg, #1E4A76, #2A68B0) !important;
             transform: translateY(2px);
         }
+        
+        #notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        #notification.success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+        
+        #notification.info {
+            background: linear-gradient(135deg, #17a2b8, #6610f2);
+        }
+        
+        #notification.loading {
+            background: linear-gradient(135deg, #007bff, #6c757d);
+        }
     </style>
     
     <script>
         let isLoggedIn = false;
         let currentUser = null;
+        let currentProcedureData = null;
         
         // 登录逻辑
         function initLogin() {
@@ -1067,18 +1198,37 @@
                 const username = document.getElementById('loginUsername').value;
                 const password = document.getElementById('loginPassword').value;
                 
-                // 前端验证默认账户
-                if ((username === 'admin' && password === '123456') || (username === 'user' && password === 'user123')) {
-                    isLoggedIn = true;
-                    currentUser = username;
-                    loginModal.style.display = 'none';
-                    mainContent.style.display = 'block';
-                    loadDepartments();
-                    initHotProcedures();
-                } else {
-                    loginError.textContent = '用户名或密码错误';
+                // 从数据库验证
+                fetch('http://localhost:3004/api/users/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        isLoggedIn = true;
+                        currentUser = username;
+                        loginModal.style.display = 'none';
+                        mainContent.style.display = 'block';
+                        loadDepartments();
+                        initHotProcedures();
+                        // 如果有提示信息，显示提示
+                        if (data.message) {
+                            alert(data.message);
+                        }
+                    } else {
+                        loginError.textContent = data.message || '用户名或密码错误';
+                        loginError.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('登录失败:', error);
+                    loginError.textContent = `系统错误，请稍后重试（${error.message || '网络连接失败'}）`;
                     loginError.style.display = 'block';
-                }
+                });
             });
         }
         
@@ -1092,13 +1242,13 @@
                 '全膝关节置换术',
                 '腹腔镜胆囊切除术',
                 '脊柱融合术',
-                '前列腺癌根治术',
                 '颅内肿瘤切除术',
                 '冠状动脉搭桥术',
                 '腹主动脉瘤切除术',
                 '肺叶切除术',
                 '子宫切除术',
-                '肾部分切除术'
+                '口腔种植手术',
+                '全髋关节置换术'
             ];
             
             // 生成热门术式卡片
@@ -1128,12 +1278,6 @@
             { name: "脊柱", order: 2, procedures: ["脊柱融合术", "腰椎间盘突出症髓核摘除术", "颈椎前路减压融合术"] },
             { name: "髋关节", order: 3, procedures: ["全髋关节置换术", "髋关节镜手术"] },
             { name: "骨折", order: 4, procedures: ["股骨颈骨折内固定术", "桡骨远端骨折复位内固定术"] }
-          ]},
-          { id: "urology", name: "泌尿外科", organs: [
-            { name: "前列腺", order: 1, procedures: ["前列腺癌根治术", "经尿道前列腺电切术"] },
-            { name: "肾脏", order: 2, procedures: ["肾部分切除术", "肾癌根治术", "肾结石碎石术"] },
-            { name: "膀胱", order: 3, procedures: ["膀胱癌根治术", "经尿道膀胱肿瘤电切术"] },
-            { name: "输尿管", order: 4, procedures: ["输尿管镜碎石术", "输尿管吻合术"] }
           ]},
           { id: "gyn", name: "妇产科", organs: [
             { name: "子宫", order: 1, procedures: ["子宫切除术", "子宫肌瘤剔除术", "子宫内膜癌根治术"] },
@@ -1239,10 +1383,27 @@
             });
         }
         
+        // 获取服务配置
+        let mcpConfig = null;
+        async function getMCPConfig() {
+            if (mcpConfig) return mcpConfig;
+            try {
+                const response = await fetch('/api/config');
+                if (response.ok) {
+                    mcpConfig = await response.json();
+                    return mcpConfig;
+                }
+            } catch (error) {
+                console.warn('获取配置失败，使用默认配置');
+            }
+            return { mcpPort: 3003, mcpEnabled: true };
+        }
+        
         // 从MCP服务器获取术式数据
         async function fetchFromMCP(procedureName) {
             try {
-                const response = await fetch('http://localhost:3003/mcp/tools/get_procedure_data', {
+                const config = await getMCPConfig();
+                const response = await fetch(`http://localhost:${config.mcpPort}/mcp/tools/get_procedure_data`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1273,7 +1434,7 @@
         // 从API获取术式数据
         async function fetchFromAPI(procedureName) {
             try {
-                const response = await fetch(`/api/procedures/${encodeURIComponent(procedureName)}`);
+                const response = await fetch(`http://localhost:3004/api/procedures/${encodeURIComponent(procedureName)}`);
                 
                 if (!response.ok) {
                     throw new Error(`API响应错误: ${response.status}`);
@@ -1310,7 +1471,7 @@
             procedureData = getDefaultProcedureData(procedureName, procedureData);
             
             // 更新页面标题
-            document.getElementById('procedureTitle').textContent = `${procedureData.name}手术详情信息`;
+            document.getElementById('procedureTitle').textContent = `${procedureData.name}详情信息`;
             
             // 填充术式信息
             document.getElementById('procedureName').textContent = procedureData.name;
@@ -1352,20 +1513,23 @@
                 });
             }
             
-            // 填充手术步骤
+            // 保存当前手术数据到全局变量
+            currentProcedureData = procedureData;
+            
+            // 填充手术步骤（默认显示传统手术步骤）
             const procedureSteps = document.getElementById('procedureSteps');
             procedureSteps.innerHTML = '';
-            if (procedureData.steps && Array.isArray(procedureData.steps)) {
-                procedureData.steps.forEach(step => {
-                    const stepItem = document.createElement('div');
-                    stepItem.style = 'display: flex; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #E2E8F0;';
-                    stepItem.innerHTML = `
-                        <div style="width: 100px; font-weight: bold; color: #1E4A76; font-size: 16px;">${step.timestamp}s</div>
-                        <div style="flex: 1; font-size: 16px; color: #333;">${step.name}</div>
-                    `;
-                    procedureSteps.appendChild(stepItem);
-                });
-            }
+            const stepsToShow = procedureData.traditionalSteps && Array.isArray(procedureData.traditionalSteps) ? procedureData.traditionalSteps : 
+                              (procedureData.steps && Array.isArray(procedureData.steps) ? procedureData.steps : []);
+            stepsToShow.forEach(step => {
+                const stepItem = document.createElement('div');
+                stepItem.style = 'display: flex; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #E2E8F0;';
+                stepItem.innerHTML = `
+                    <div style="width: 100px; font-weight: bold; color: #1E4A76; font-size: 16px;">${step.timestamp}s</div>
+                    <div style="flex: 1; font-size: 16px; color: #333;">${step.name}</div>
+                `;
+                procedureSteps.appendChild(stepItem);
+            });
             
             // 设置视频源
             document.getElementById('traditionalVideo').src = getVideoUrl(procedureName, 'traditional');
@@ -1401,6 +1565,24 @@
                         { name: '出血量', value: '100-300ml', desc: '估计失血量' },
                         { name: '住院时间', value: '3-7天', desc: '术后平均住院时间' },
                         { name: '恢复时间', value: '3-6个月', desc: '完全恢复正常活动' }
+                    ],
+                    traditionalSteps: data.traditionalSteps || [
+                        { timestamp: '5', name: '皮肤消毒与铺巾' },
+                        { timestamp: '15', name: '切开皮肤与筋膜' },
+                        { timestamp: '30', name: '股骨远端截骨' },
+                        { timestamp: '90', name: '胫骨近端截骨' },
+                        { timestamp: '150', name: '试模与软组织平衡' },
+                        { timestamp: '210', name: '假体植入与固定' },
+                        { timestamp: '240', name: '缝合伤口' }
+                    ],
+                    roboticSteps: data.roboticSteps || [
+                        { timestamp: '5', name: '皮肤消毒与铺巾' },
+                        { timestamp: '25', name: '安装机器人臂与注册' },
+                        { timestamp: '50', name: '股骨远端精准截骨' },
+                        { timestamp: '100', name: '胫骨近端精准截骨' },
+                        { timestamp: '140', name: '机器人辅助试模与平衡' },
+                        { timestamp: '180', name: '假体植入与固定' },
+                        { timestamp: '210', name: '缝合伤口' }
                     ],
                     steps: data.steps || [
                         { timestamp: '0', name: '患者麻醉' },
@@ -1439,6 +1621,26 @@
                         { name: '住院时间', value: '3-7天', desc: '术后平均住院时间' },
                         { name: '恢复时间', value: '3-6个月', desc: '完全恢复正常活动' }
                     ],
+                    traditionalSteps: data.traditionalSteps || [
+                        { timestamp: '5', name: '皮肤消毒与铺巾' },
+                        { timestamp: '15', name: '切开皮肤与筋膜' },
+                        { timestamp: '30', name: '暴露髋关节' },
+                        { timestamp: '60', name: '股骨颈截骨' },
+                        { timestamp: '120', name: '髋臼准备' },
+                        { timestamp: '180', name: '股骨准备' },
+                        { timestamp: '240', name: '假体植入与固定' },
+                        { timestamp: '300', name: '缝合伤口' }
+                    ],
+                    roboticSteps: data.roboticSteps || [
+                        { timestamp: '5', name: '皮肤消毒与铺巾' },
+                        { timestamp: '25', name: '安装机器人臂与注册' },
+                        { timestamp: '50', name: '机器人辅助暴露髋关节' },
+                        { timestamp: '80', name: '股骨颈截骨' },
+                        { timestamp: '140', name: '机器人辅助髋臼精准准备' },
+                        { timestamp: '200', name: '机器人辅助股骨准备' },
+                        { timestamp: '260', name: '机器人辅助假体精准植入' },
+                        { timestamp: '300', name: '缝合伤口' }
+                    ],
                     steps: data.steps || [
                         { timestamp: '0', name: '患者麻醉' },
                         { timestamp: '300', name: '消毒铺巾' },
@@ -1475,6 +1677,26 @@
                         { name: '出血量', value: '5-50ml', desc: '估计失血量' },
                         { name: '切口数量', value: '3-4个', desc: '每个切口0.5-1.5cm' },
                         { name: '中转开腹率', value: '1-2%', desc: '因解剖困难或并发症' }
+                    ],
+                    traditionalSteps: data.traditionalSteps || [
+                        { timestamp: '5', name: '皮肤消毒与铺巾' },
+                        { timestamp: '15', name: '建立气腹与穿刺' },
+                        { timestamp: '25', name: '置入腹腔镜与器械' },
+                        { timestamp: '50', name: '解剖胆囊三角' },
+                        { timestamp: '95', name: '离断胆囊管及动脉' },
+                        { timestamp: '145', name: '剥离胆囊床' },
+                        { timestamp: '170', name: '取出胆囊' },
+                        { timestamp: '190', name: '缝合穿刺孔' }
+                    ],
+                    roboticSteps: data.roboticSteps || [
+                        { timestamp: '5', name: '皮肤消毒与铺巾' },
+                        { timestamp: '15', name: '建立气腹与穿刺' },
+                        { timestamp: '30', name: '安装机器人臂' },
+                        { timestamp: '60', name: '机器人辅助解剖胆囊三角' },
+                        { timestamp: '100', name: '机器人辅助离断胆囊管及动脉' },
+                        { timestamp: '135', name: '机器人辅助剥离胆囊床' },
+                        { timestamp: '155', name: '取出胆囊' },
+                        { timestamp: '175', name: '缝合穿刺孔' }
                     ],
                     steps: data.steps || [
                         { timestamp: '0', name: '患者麻醉' },
@@ -1513,6 +1735,24 @@
                         { name: '辐射暴露', value: '减少70%', desc: '机器人辅助相比传统透视' },
                         { name: '恢复时间', value: '3-6个月', desc: '完全恢复正常活动' }
                     ],
+                    traditionalSteps: data.traditionalSteps || [
+                        { timestamp: '5', name: '皮肤消毒与铺巾' },
+                        { timestamp: '15', name: '切开皮肤与筋膜' },
+                        { timestamp: '30', name: '暴露脊柱' },
+                        { timestamp: '60', name: '椎弓根置钉' },
+                        { timestamp: '120', name: '椎体间融合' },
+                        { timestamp: '180', name: '安装内固定' },
+                        { timestamp: '240', name: '缝合伤口' }
+                    ],
+                    roboticSteps: data.roboticSteps || [
+                        { timestamp: '5', name: '皮肤消毒与铺巾' },
+                        { timestamp: '25', name: '安装机器人臂与注册' },
+                        { timestamp: '50', name: '机器人辅助暴露脊柱' },
+                        { timestamp: '80', name: '机器人辅助椎弓根精准置钉' },
+                        { timestamp: '140', name: '椎体间融合' },
+                        { timestamp: '200', name: '安装内固定' },
+                        { timestamp: '240', name: '缝合伤口' }
+                    ],
                     steps: data.steps || [
                         { timestamp: '0', name: '患者麻醉' },
                         { timestamp: '300', name: '消毒铺巾' },
@@ -1548,6 +1788,26 @@
                         { name: '出血量', value: '100-300ml', desc: '估计失血量' },
                         { name: '住院时间', value: '1-3天', desc: '术后平均住院时间' },
                         { name: '恢复时间', value: '4-6周', desc: '完全恢复正常活动' }
+                    ],
+                    traditionalSteps: data.traditionalSteps || [
+                        { timestamp: '5', name: '皮肤消毒与铺巾' },
+                        { timestamp: '15', name: '建立气腹与穿刺' },
+                        { timestamp: '25', name: '置入腹腔镜与器械' },
+                        { timestamp: '50', name: '游离前列腺' },
+                        { timestamp: '95', name: '离断输精管和精囊' },
+                        { timestamp: '145', name: '切除前列腺' },
+                        { timestamp: '170', name: '膀胱尿道吻合' },
+                        { timestamp: '190', name: '关闭切口' }
+                    ],
+                    roboticSteps: data.roboticSteps || [
+                        { timestamp: '5', name: '皮肤消毒与铺巾' },
+                        { timestamp: '15', name: '建立气腹与穿刺' },
+                        { timestamp: '30', name: '安装机器人臂' },
+                        { timestamp: '60', name: '机器人辅助游离前列腺' },
+                        { timestamp: '100', name: '机器人辅助离断输精管和精囊' },
+                        { timestamp: '135', name: '机器人辅助切除前列腺' },
+                        { timestamp: '155', name: '机器人辅助膀胱尿道吻合' },
+                        { timestamp: '175', name: '关闭切口' }
                     ],
                     steps: data.steps || [
                         { timestamp: '0', name: '患者麻醉' },
@@ -1585,6 +1845,28 @@
                         { name: '出血量', value: '100-300ml', desc: '估计失血量' },
                         { name: '切口数量', value: '3-4个', desc: '每个切口0.5-2cm' },
                         { name: '恢复时间', value: '4-6周', desc: '完全恢复正常活动' }
+                    ],
+                    traditionalSteps: data.traditionalSteps || [
+                        { timestamp: '5', name: '皮肤消毒与铺巾' },
+                        { timestamp: '15', name: '建立气腹与穿刺' },
+                        { timestamp: '25', name: '置入胸腔镜与器械' },
+                        { timestamp: '50', name: '探查胸腔' },
+                        { timestamp: '95', name: '游离肺叶' },
+                        { timestamp: '145', name: '离断肺动脉、肺静脉' },
+                        { timestamp: '170', name: '离断支气管' },
+                        { timestamp: '190', name: '切除肺叶' },
+                        { timestamp: '210', name: '关闭切口' }
+                    ],
+                    roboticSteps: data.roboticSteps || [
+                        { timestamp: '5', name: '皮肤消毒与铺巾' },
+                        { timestamp: '15', name: '建立气腹与穿刺' },
+                        { timestamp: '30', name: '安装机器人臂' },
+                        { timestamp: '60', name: '机器人辅助探查胸腔' },
+                        { timestamp: '100', name: '机器人辅助游离肺叶' },
+                        { timestamp: '135', name: '机器人辅助离断肺动脉、肺静脉' },
+                        { timestamp: '155', name: '机器人辅助离断支气管' },
+                        { timestamp: '175', name: '切除肺叶' },
+                        { timestamp: '195', name: '关闭切口' }
                     ],
                     steps: data.steps || [
                         { timestamp: '0', name: '患者麻醉' },
@@ -1624,6 +1906,26 @@
                         { name: '切口数量', value: '3-4个', desc: '每个切口0.5-1.5cm' },
                         { name: '中转开腹率', value: '1-2%', desc: '因解剖困难或并发症' }
                     ],
+                    traditionalSteps: data.traditionalSteps || [
+                        { timestamp: '5', name: '皮肤消毒与铺巾' },
+                        { timestamp: '15', name: '建立气腹与穿刺' },
+                        { timestamp: '25', name: '置入腹腔镜与器械' },
+                        { timestamp: '50', name: '探查盆腔' },
+                        { timestamp: '95', name: '游离子宫' },
+                        { timestamp: '145', name: '离断子宫血管' },
+                        { timestamp: '170', name: '切除子宫' },
+                        { timestamp: '190', name: '关闭切口' }
+                    ],
+                    roboticSteps: data.roboticSteps || [
+                        { timestamp: '5', name: '皮肤消毒与铺巾' },
+                        { timestamp: '15', name: '建立气腹与穿刺' },
+                        { timestamp: '30', name: '安装机器人臂' },
+                        { timestamp: '60', name: '机器人辅助探查盆腔' },
+                        { timestamp: '100', name: '机器人辅助游离子宫' },
+                        { timestamp: '135', name: '机器人辅助离断子宫血管' },
+                        { timestamp: '155', name: '切除子宫' },
+                        { timestamp: '175', name: '关闭切口' }
+                    ],
                     steps: data.steps || [
                         { timestamp: '0', name: '患者麻醉' },
                         { timestamp: '300', name: '消毒铺巾' },
@@ -1660,6 +1962,28 @@
                         { name: '出血量', value: '300-500ml', desc: '估计失血量' },
                         { name: '住院时间', value: '7-10天', desc: '术后平均住院时间' },
                         { name: '恢复时间', value: '6-12周', desc: '完全恢复正常活动' }
+                    ],
+                    traditionalSteps: data.traditionalSteps || [
+                        { timestamp: '5', name: '皮肤消毒与铺巾' },
+                        { timestamp: '15', name: '切开皮肤与筋膜' },
+                        { timestamp: '30', name: '游离桥血管' },
+                        { timestamp: '60', name: '建立体外循环' },
+                        { timestamp: '120', name: '心脏停跳' },
+                        { timestamp: '180', name: '吻合桥血管' },
+                        { timestamp: '240', name: '心脏复跳' },
+                        { timestamp: '300', name: '脱离体外循环' },
+                        { timestamp: '360', name: '关闭切口' }
+                    ],
+                    roboticSteps: data.roboticSteps || [
+                        { timestamp: '5', name: '皮肤消毒与铺巾' },
+                        { timestamp: '25', name: '安装机器人臂与注册' },
+                        { timestamp: '50', name: '机器人辅助游离桥血管' },
+                        { timestamp: '80', name: '建立体外循环' },
+                        { timestamp: '140', name: '心脏停跳' },
+                        { timestamp: '200', name: '机器人辅助吻合桥血管' },
+                        { timestamp: '260', name: '心脏复跳' },
+                        { timestamp: '300', name: '脱离体外循环' },
+                        { timestamp: '360', name: '关闭切口' }
                     ],
                     steps: data.steps || [
                         { timestamp: '0', name: '患者麻醉' },
@@ -1698,6 +2022,26 @@
                         { name: '住院时间', value: '5-7天', desc: '术后平均住院时间' },
                         { name: '恢复时间', value: '4-6周', desc: '完全恢复正常活动' }
                     ],
+                    traditionalSteps: data.traditionalSteps || [
+                        { timestamp: '5', name: '皮肤消毒与铺巾' },
+                        { timestamp: '15', name: '切开皮肤与筋膜' },
+                        { timestamp: '30', name: '暴露腹主动脉' },
+                        { timestamp: '60', name: '阻断主动脉' },
+                        { timestamp: '120', name: '切除动脉瘤' },
+                        { timestamp: '180', name: '植入人工血管' },
+                        { timestamp: '240', name: '吻合血管' },
+                        { timestamp: '300', name: '关闭切口' }
+                    ],
+                    roboticSteps: data.roboticSteps || [
+                        { timestamp: '5', name: '皮肤消毒与铺巾' },
+                        { timestamp: '25', name: '安装机器人臂与注册' },
+                        { timestamp: '50', name: '机器人辅助暴露腹主动脉' },
+                        { timestamp: '80', name: '阻断主动脉' },
+                        { timestamp: '140', name: '切除动脉瘤' },
+                        { timestamp: '200', name: '植入人工血管' },
+                        { timestamp: '260', name: '机器人辅助吻合血管' },
+                        { timestamp: '300', name: '关闭切口' }
+                    ],
                     steps: data.steps || [
                         { timestamp: '0', name: '患者麻醉' },
                         { timestamp: '300', name: '消毒铺巾' },
@@ -1734,6 +2078,28 @@
                         { name: '出血量', value: '100-300ml', desc: '估计失血量' },
                         { name: '住院时间', value: '7-10天', desc: '术后平均住院时间' },
                         { name: '恢复时间', value: '4-6周', desc: '完全恢复正常活动' }
+                    ],
+                    traditionalSteps: data.traditionalSteps || [
+                        { timestamp: '5', name: '皮肤消毒与铺巾' },
+                        { timestamp: '15', name: '建立气腹与穿刺' },
+                        { timestamp: '25', name: '置入腹腔镜与器械' },
+                        { timestamp: '50', name: '探查腹腔' },
+                        { timestamp: '95', name: '游离胃' },
+                        { timestamp: '145', name: '清扫淋巴结' },
+                        { timestamp: '170', name: '切除胃' },
+                        { timestamp: '190', name: '胃肠吻合' },
+                        { timestamp: '210', name: '关闭切口' }
+                    ],
+                    roboticSteps: data.roboticSteps || [
+                        { timestamp: '5', name: '皮肤消毒与铺巾' },
+                        { timestamp: '15', name: '建立气腹与穿刺' },
+                        { timestamp: '30', name: '安装机器人臂' },
+                        { timestamp: '60', name: '机器人辅助探查腹腔' },
+                        { timestamp: '100', name: '机器人辅助游离胃' },
+                        { timestamp: '135', name: '机器人辅助清扫淋巴结' },
+                        { timestamp: '155', name: '机器人辅助切除胃' },
+                        { timestamp: '175', name: '机器人辅助胃肠吻合' },
+                        { timestamp: '195', name: '关闭切口' }
                     ],
                     steps: data.steps || [
                         { timestamp: '0', name: '患者麻醉' },
@@ -1773,6 +2139,28 @@
                         { name: '热缺血时间', value: '20-30分钟', desc: '肾脏缺血时间' },
                         { name: '住院时间', value: '3-5天', desc: '术后平均住院时间' }
                     ],
+                    traditionalSteps: data.traditionalSteps || [
+                        { timestamp: '5', name: '皮肤消毒与铺巾' },
+                        { timestamp: '15', name: '建立气腹与穿刺' },
+                        { timestamp: '25', name: '置入腹腔镜与器械' },
+                        { timestamp: '50', name: '暴露肾脏' },
+                        { timestamp: '95', name: '阻断肾动脉' },
+                        { timestamp: '145', name: '切除肿瘤' },
+                        { timestamp: '170', name: '缝合肾脏' },
+                        { timestamp: '190', name: '恢复肾动脉血流' },
+                        { timestamp: '210', name: '关闭切口' }
+                    ],
+                    roboticSteps: data.roboticSteps || [
+                        { timestamp: '5', name: '皮肤消毒与铺巾' },
+                        { timestamp: '15', name: '建立气腹与穿刺' },
+                        { timestamp: '30', name: '安装机器人臂' },
+                        { timestamp: '60', name: '机器人辅助暴露肾脏' },
+                        { timestamp: '100', name: '阻断肾动脉' },
+                        { timestamp: '135', name: '机器人辅助切除肿瘤' },
+                        { timestamp: '155', name: '机器人辅助缝合肾脏' },
+                        { timestamp: '175', name: '恢复肾动脉血流' },
+                        { timestamp: '195', name: '关闭切口' }
+                    ],
                     steps: data.steps || [
                         { timestamp: '0', name: '患者麻醉' },
                         { timestamp: '300', name: '消毒铺巾' },
@@ -1784,6 +2172,110 @@
                         { timestamp: '3000', name: '缝合肾脏' },
                         { timestamp: '3600', name: '恢复肾动脉血流' },
                         { timestamp: '4200', name: '关闭切口' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 口腔种植手术默认数据
+            else if (procedureName === '口腔种植手术') {
+                return {
+                    name: data.name || '口腔种植手术',
+                    dept: data.dept || '口腔科',
+                    organ: data.organ || '口腔',
+                    indications: data.indications || '1. 牙齿缺失；2. 全口无牙；3. 传统假牙不适；4. 牙槽骨条件良好。',
+                    contraindications: data.contraindications || '1. 严重骨质疏松；2. 未控制的糖尿病；3. 凝血功能障碍；4. 口腔感染。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统种植：依赖医生经验，种植体位置和角度受人为因素影响；2. 机器人辅助种植：通过3D规划和实时导航，提高种植精度和成功率。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '种植体成功率', value: '95-98%', desc: '5年成功率' },
+                        { name: '种植精度', value: '±0.5mm', desc: '种植体位置偏差' },
+                        { name: '术后疼痛评分', value: '1-2分', desc: 'VAS评分，满分10分' },
+                        { name: '恢复时间', value: '3-6个月', desc: '完全恢复正常功能' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '30-60分钟', desc: '每颗种植体' },
+                        { name: '出血量', value: '5-20ml', desc: '估计失血量' },
+                        { name: '麻醉方式', value: '局部麻醉', desc: '通常无需全身麻醉' },
+                        { name: '住院时间', value: '0-1天', desc: '大多数患者当天出院' }
+                    ],
+                    traditionalSteps: data.traditionalSteps || [
+                        { timestamp: '5', name: '口腔消毒与麻醉' },
+                        { timestamp: '15', name: '切开牙龈' },
+                        { timestamp: '30', name: '牙槽骨预备' },
+                        { timestamp: '60', name: '种植体植入' },
+                        { timestamp: '90', name: '缝合牙龈' },
+                        { timestamp: '120', name: '放置愈合基台' }
+                    ],
+                    roboticSteps: data.roboticSteps || [
+                        { timestamp: '5', name: '口腔消毒与麻醉' },
+                        { timestamp: '25', name: '机器人系统注册' },
+                        { timestamp: '50', name: '机器人辅助牙槽骨精准预备' },
+                        { timestamp: '80', name: '机器人辅助种植体精准植入' },
+                        { timestamp: '110', name: '缝合牙龈' },
+                        { timestamp: '130', name: '放置愈合基台' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者准备' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '局部麻醉' },
+                        { timestamp: '900', name: '牙龈切开' },
+                        { timestamp: '1200', name: '骨预备' },
+                        { timestamp: '1800', name: '种植体植入' },
+                        { timestamp: '2400', name: '牙龈缝合' },
+                        { timestamp: '3000', name: '术后处理' }
+                    ],
+                    traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
+                    roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
+                };
+            }
+            
+            // 根管治疗术默认数据
+            else if (procedureName === '根管治疗术') {
+                return {
+                    name: data.name || '根管治疗术',
+                    dept: data.dept || '口腔科',
+                    organ: data.organ || '牙齿',
+                    indications: data.indications || '1. 牙髓炎；2. 根尖周炎；3. 牙髓坏死；4. 深龋露髓。',
+                    contraindications: data.contraindications || '1. 牙齿无法保留；2. 严重牙周病；3. 患者无法配合；4. 全身状况差。',
+                    guidelineDiff: data.guidelineDiff || '1. 传统根管治疗：依赖医生经验，根管预备和充填精度受人为因素影响；2. 机器人辅助根管治疗：通过3D影像和实时导航，提高根管预备和充填精度。',
+                    clinicalMetrics: data.clinicalMetrics || [
+                        { name: '治疗成功率', value: '90-95%', desc: '1年成功率' },
+                        { name: '根管充填质量', value: '≥90%', desc: '恰填率' },
+                        { name: '术后疼痛评分', value: '2-3分', desc: 'VAS评分，满分10分' },
+                        { name: '恢复时间', value: '1-2周', desc: '完全恢复正常功能' }
+                    ],
+                    operationMetrics: data.operationMetrics || [
+                        { name: '手术时间', value: '30-90分钟', desc: '根据根管复杂度' },
+                        { name: '麻醉方式', value: '局部麻醉', desc: '通常无需全身麻醉' },
+                        { name: '就诊次数', value: '1-3次', desc: '根据病情复杂度' },
+                        { name: '术后随访', value: '6-12个月', desc: '定期复查' }
+                    ],
+                    traditionalSteps: data.traditionalSteps || [
+                        { timestamp: '5', name: '口腔消毒与麻醉' },
+                        { timestamp: '15', name: '开髓与髓腔预备' },
+                        { timestamp: '30', name: '根管定位与测量' },
+                        { timestamp: '60', name: '根管预备与冲洗' },
+                        { timestamp: '90', name: '根管充填' },
+                        { timestamp: '120', name: '冠部封闭' }
+                    ],
+                    roboticSteps: data.roboticSteps || [
+                        { timestamp: '5', name: '口腔消毒与麻醉' },
+                        { timestamp: '25', name: '机器人系统校准' },
+                        { timestamp: '50', name: '机器人辅助开髓与髓腔预备' },
+                        { timestamp: '80', name: '机器人辅助根管精准预备与冲洗' },
+                        { timestamp: '110', name: '机器人辅助根管充填' },
+                        { timestamp: '130', name: '冠部封闭' }
+                    ],
+                    steps: data.steps || [
+                        { timestamp: '0', name: '患者准备' },
+                        { timestamp: '300', name: '消毒铺巾' },
+                        { timestamp: '600', name: '局部麻醉' },
+                        { timestamp: '900', name: '开髓' },
+                        { timestamp: '1200', name: '根管预备' },
+                        { timestamp: '1800', name: '根管冲洗' },
+                        { timestamp: '2400', name: '根管充填' },
+                        { timestamp: '3000', name: '冠部修复' }
                     ],
                     traditionalVideo: data.traditionalVideo || 'BV1LTyaYeEas',
                     roboticVideo: data.roboticVideo || 'BV1LTyaYeEas'
@@ -2627,6 +3119,7 @@
         
         // 加载竞品数据
         function loadCompetitors(procedureName) {
+            // 总是从后端获取最新的数据，确保数据一致性
             fetch(`/api/competitors/${encodeURIComponent(procedureName)}`)
                 .then(response => response.json())
                 .then(data => {
@@ -2646,8 +3139,11 @@
                     
                     competitorsList.innerHTML = '';
                     
-                    if (data && Array.isArray(data) && data.length > 0) {
-                        data.forEach(competitor => {
+                    // 过滤掉型号为"未知型号"的数据
+                    const filteredData = data && Array.isArray(data) ? data.filter(item => item.model !== '未知型号') : [];
+                    
+                    if (filteredData.length > 0) {
+                        filteredData.forEach(competitor => {
                             const competitorCard = document.createElement('div');
                             competitorCard.style = 'background: #f9f9f9; padding: 25px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid #1E4A76; transition: transform 0.3s ease, box-shadow 0.3s ease;';
                             competitorCard.onmouseover = function() {
@@ -2668,58 +3164,26 @@
                                 if (params.includes(';')) {
                                     const paramLines = params.split(';').map(p => p.trim()).filter(p => p);
                                     
-                                    // 按照分类组织参数
-                                    const paramCategories = {
-                                        '1. 精度指标': [],
-                                        '2. 机械系统参数': [],
-                                        '3. 视觉系统参数': [],
-                                        '4. 控制系统参数': []
-                                    };
-                                    
-                                    // 分类参数
-                                    paramLines.forEach(param => {
-                                        const [name, value] = param.split(':').map(p => p.trim());
-                                        if (!name || !value) return;
-                                        
-                                        if (name.includes('精度') || name.includes('分辨率')) {
-                                            paramCategories['1. 精度指标'].push({ name, value });
-                                        } else if (name.includes('臂') || name.includes('关节') || name.includes('自由度') || name.includes('负载')) {
-                                            paramCategories['2. 机械系统参数'].push({ name, value });
-                                        } else if (name.includes('视野') || name.includes('分辨率') || name.includes('放大')) {
-                                            paramCategories['3. 视觉系统参数'].push({ name, value });
-                                        } else if (name.includes('响应') || name.includes('控制') || name.includes('安全')) {
-                                            paramCategories['4. 控制系统参数'].push({ name, value });
-                                        }
-                                    });
-                                    
-                                    // 生成分类参数HTML
-                                    Object.entries(paramCategories).forEach(([category, items]) => {
-                                        if (items.length > 0) {
-                                            paramsHtml += `
-                                                <h4 style="margin-bottom: 10px; color: #333; font-size: 14px; font-weight: bold;">${category}:</h4>
-                                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                                                    ${items.map(item => `
-                                                        <div style="font-size: 14px;">
-                                                            <strong>${item.name}:</strong> ${item.value}
-                                                        </div>
-                                                    `).join('')}
-                                                </div>
-                                            `;
-                                        }
-                                    });
-                                    
-                                    // 如果没有分类参数，显示原始参数
-                                    if (!paramsHtml && paramLines.length > 0) {
+                                    if (paramLines.length > 0) {
                                         paramsHtml = `
                                             <h4 style="margin-bottom: 10px; color: #333; font-size: 14px; font-weight: bold;">核心参数:</h4>
-                                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                                            <div style="margin-bottom: 15px;">
                                                 ${paramLines.map(param => {
-                                                    const [name, value] = param.split(':').map(p => p.trim());
-                                                    return `
-                                                        <div style="font-size: 14px;">
-                                                            <strong>${name || '参数'}:</strong> ${value || 'N/A'}
-                                                        </div>
-                                                    `;
+                                                    if (param.includes(':')) {
+                                                        const [name, value] = param.split(':').map(p => p.trim());
+                                                        return `
+                                                            <div style="font-size: 14px; margin-bottom: 5px;">
+                                                                <strong>${name || '参数'}:</strong> ${value || 'N/A'}
+                                                            </div>
+                                                        `;
+                                                    } else {
+                                                        // 处理没有冒号的参数
+                                                        return `
+                                                            <div style="font-size: 14px; margin-bottom: 5px;">
+                                                                ${param}
+                                                            </div>
+                                                        `;
+                                                    }
                                                 }).join('')}
                                             </div>
                                         `;
@@ -2786,47 +3250,333 @@
                 });
         }
         
+        // 显示通知弹窗
+        function showNotification(message, type = 'info', duration = 3000) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = type;
+            
+            // 显示通知
+            notification.classList.add('show');
+            
+            // 3秒后自动隐藏
+            setTimeout(() => {
+                notification.classList.remove('show');
+                // 淡出效果
+                setTimeout(() => {
+                    notification.className = '';
+                }, 300);
+            }, duration);
+        }
+        
         // 更新竞品数据
         function updateCompetitorsData(procedureName) {
             // 显示加载状态
             const updateBtn = document.getElementById('updateCompetitorsBtn');
             const originalText = updateBtn.textContent;
-            updateBtn.textContent = '更新中...';
+            updateBtn.textContent = '检查中...';
             updateBtn.disabled = true;
             
-            // 调用后端API更新竞品数据
+            // 显示加载通知
+            showNotification('正在检查新数据...', 'loading', 5000);
+            
+            // 调用后端API获取新数据（不直接更新）
             fetch('/api/competitors/update', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ procedureName, username: currentUser })
+                body: JSON.stringify({ procedureName, username: currentUser, preview: true })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     if (data.isUpToDate) {
                         // 数据已经是最新的
-                        alert(data.message || '当前数据信息已经是最新信息！');
+                        showNotification(data.message || '当前数据已经是最新版', 'info', 3000);
+                        updateBtn.textContent = originalText;
+                        updateBtn.disabled = false;
                     } else {
-                        // 数据更新成功
-                        alert('数据更新成功！');
-                        // 重新加载竞品数据
-                        loadCompetitors(procedureName);
+                        // 有新数据，显示预览
+                        showNotification('检测到新的数据，正在显示预览...', 'info', 2000);
+                        
+                        // 临时存储新数据
+                        window.tempCompetitorsData = data.competitors;
+                        window.currentProcedureName = procedureName;
+                        
+                        // 显示新数据预览
+                        displayCompetitorsPreview(data.competitors);
+                        
+                        // 替换更新按钮为确认/拒绝按钮
+                        replaceUpdateBtnWithConfirmation();
                     }
                 } else {
-                    alert('数据更新失败：' + (data.error || '未知错误'));
+                    showNotification('检查数据失败：' + (data.error || '未知错误'), 'info', 3000);
+                    updateBtn.textContent = originalText;
+                    updateBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('检查竞品数据失败:', error);
+                showNotification('检查数据失败，请稍后重试', 'info', 3000);
+                updateBtn.textContent = originalText;
+                updateBtn.disabled = false;
+            });
+        }
+        
+        // 显示竞品数据预览
+        function displayCompetitorsPreview(competitors) {
+            const competitorsList = document.getElementById('competitorsList');
+            competitorsList.innerHTML = '';
+            
+            if (competitors && Array.isArray(competitors) && competitors.length > 0) {
+                // 过滤掉型号为"未知型号"或"标准型号"的数据
+                const filteredCompetitors = competitors.filter(item => item.model !== '未知型号' && item.model !== '标准型号');
+                
+                if (filteredCompetitors.length > 0) {
+                    filteredCompetitors.forEach(competitor => {
+                        const competitorCard = document.createElement('div');
+                        competitorCard.style = 'background: #f9f9f9; padding: 25px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid #4CAF50; transition: transform 0.3s ease, box-shadow 0.3s ease;';
+                        competitorCard.onmouseover = function() {
+                            this.style.transform = 'translateY(-5px)';
+                            this.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+                        };
+                        competitorCard.onmouseout = function() {
+                            this.style.transform = 'translateY(0)';
+                            this.style.boxShadow = 'none';
+                        };
+                        
+                        // 解析核心参数
+                        const params = competitor.params || '';
+                        let paramsHtml = '';
+                        
+                        if (params) {
+                            // 检查是否包含分号分隔的多个参数
+                            if (params.includes(';')) {
+                                const paramLines = params.split(';').map(p => p.trim()).filter(p => p);
+                                
+                                if (paramLines.length > 0) {
+                                    paramsHtml = `
+                                        <div style="margin-bottom: 15px;">
+                                            ${paramLines.map(param => {
+                                                if (param.includes(':')) {
+                                                    const [name, value] = param.split(':').map(p => p.trim());
+                                                    return `
+                                                        <div style="font-size: 14px; margin-bottom: 5px;">
+                                                            <strong>${name || '参数'}:</strong> ${value || 'N/A'}
+                                                        </div>
+                                                    `;
+                                                } else {
+                                                    // 处理没有冒号的参数
+                                                    return `
+                                                        <div style="font-size: 14px; margin-bottom: 5px;">
+                                                            ${param}
+                                                        </div>
+                                                    `;
+                                                }
+                                            }).join('')}
+                                        </div>
+                                    `;
+                                }
+                            } else {
+                                // 处理单个参数的情况
+                                if (params.includes(':')) {
+                                    const [name, value] = params.split(':').map(p => p.trim());
+                                    paramsHtml = `
+                                        <div style="margin-bottom: 15px;">
+                                            <div style="font-size: 14px;">
+                                                <strong>${name || '参数'}:</strong> ${value || 'N/A'}
+                                            </div>
+                                        </div>
+                                    `;
+                                } else {
+                                    // 处理纯文本参数
+                                    paramsHtml = `
+                                        <div style="margin-bottom: 15px;">
+                                            <div style="font-size: 14px;">${params}</div>
+                                        </div>
+                                    `;
+                                }
+                            }
+                        }
+                        
+                        competitorCard.innerHTML = `
+                            <h3 style="color: #1E4A76; margin-top: 0; margin-bottom: 15px;">${competitor.brand} ${competitor.model}</h3>
+                            <div style="margin-bottom: 15px;">
+                                <strong>核心参数:</strong>
+                                <div style="margin-top: 8px; color: #333;">
+                                    ${paramsHtml || '<div style="font-size: 14px; color: #666;">暂无核心参数数据</div>'}
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 15px;">
+                                <div>
+                                    <strong>平均价格:</strong>
+                                    <div style="color: #333;">${competitor.priceAvg || '未知'}</div>
+                                </div>
+                                <div>
+                                    <strong>装机量:</strong>
+                                    <div style="color: #333;">${competitor.installs || '未知'}</div>
+                                </div>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <strong>优势:</strong>
+                                <div style="color: #333;">${competitor.advantage || '未知'}</div>
+                            </div>
+                            <div>
+                                <strong>数据来源:</strong>
+                                <div style="color: #333;">${competitor.source || '未知'}</div>
+                            </div>
+                        `;
+                        
+                        competitorsList.appendChild(competitorCard);
+                    });
+                } else {
+                    competitorsList.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">没有找到竞品数据</div>';
+                }
+            } else {
+                competitorsList.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">没有找到竞品数据</div>';
+            }
+        }
+        
+        // 替换更新按钮为确认/拒绝按钮
+        function replaceUpdateBtnWithConfirmation() {
+            const updateBtn = document.getElementById('updateCompetitorsBtn');
+            const parentElement = updateBtn.parentElement;
+            
+            // 清空父元素
+            parentElement.innerHTML = '';
+            
+            // 创建按钮容器
+            const buttonContainer = document.createElement('div');
+            buttonContainer.style = 'display: flex; align-items: center; flex-wrap: nowrap; justify-content: flex-end;';
+            
+            // 创建确认按钮
+            const confirmBtn = document.createElement('button');
+            confirmBtn.id = 'confirmUpdateBtn';
+            confirmBtn.style = 'padding: 12px 24px; background: linear-gradient(135deg, #28a745, #20c997); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3); margin-right: 10px;';
+            confirmBtn.textContent = '确定更新';
+            
+            // 创建拒绝按钮
+            const rejectBtn = document.createElement('button');
+            rejectBtn.id = 'rejectUpdateBtn';
+            rejectBtn.style = 'padding: 12px 24px; background: linear-gradient(135deg, #dc3545, #e83e8c); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3); margin-right: 15px;';
+            rejectBtn.textContent = '拒绝更新';
+            
+            // 创建更新时间信息
+            const updateInfo = document.createElement('div');
+            updateInfo.style = 'font-size: 12px; color: #666;';
+            updateInfo.textContent = `数据检查时间: ${new Date().toLocaleString()}`;
+            
+            // 添加点击事件
+            confirmBtn.addEventListener('click', confirmUpdate);
+            rejectBtn.addEventListener('click', rejectUpdate);
+            
+            // 添加按钮和信息到按钮容器
+            buttonContainer.appendChild(confirmBtn);
+            buttonContainer.appendChild(rejectBtn);
+            buttonContainer.appendChild(updateInfo);
+            
+            // 设置父元素布局
+            parentElement.style.display = 'block';
+            parentElement.style.marginBottom = '30px';
+            
+            // 添加按钮容器到父元素
+            parentElement.appendChild(buttonContainer);
+        }
+        
+        // 确认更新
+        function confirmUpdate() {
+            const procedureName = window.currentProcedureName;
+            if (!procedureName || !window.tempCompetitorsData) {
+                showNotification('更新数据失败：缺少必要参数', 'info', 3000);
+                return;
+            }
+            
+            // 显示加载状态
+            const confirmBtn = document.getElementById('confirmUpdateBtn');
+            const rejectBtn = document.getElementById('rejectUpdateBtn');
+            confirmBtn.textContent = '更新中...';
+            confirmBtn.disabled = true;
+            rejectBtn.disabled = true;
+            
+            // 显示加载通知
+            showNotification('数据正在更新中...', 'loading', 5000);
+            
+            // 调用后端API更新数据
+            fetch('/api/competitors/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ procedureName, username: currentUser, confirm: true })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('数据更新成功！', 'success', 2000);
+                    // 恢复更新按钮
+                    restoreUpdateBtn(procedureName);
+                    // 重新加载数据
+                    setTimeout(() => {
+                        loadCompetitors(procedureName);
+                    }, 1000);
+                } else {
+                    showNotification('数据更新失败：' + (data.error || '未知错误'), 'info', 3000);
+                    // 恢复更新按钮
+                    restoreUpdateBtn(procedureName);
                 }
             })
             .catch(error => {
                 console.error('更新竞品数据失败:', error);
-                alert('数据更新失败，请稍后重试');
-            })
-            .finally(() => {
-                // 恢复按钮状态
-                updateBtn.textContent = originalText;
-                updateBtn.disabled = false;
+                showNotification('数据更新失败，请稍后重试', 'info', 3000);
+                // 恢复更新按钮
+                restoreUpdateBtn(procedureName);
             });
+        }
+        
+        // 拒绝更新
+        function rejectUpdate() {
+            const procedureName = window.currentProcedureName;
+            // 显示通知
+            showNotification('已取消数据更新', 'info', 2000);
+            // 恢复更新按钮
+            restoreUpdateBtn(procedureName);
+            // 重新加载原始数据
+            loadCompetitors(procedureName);
+        }
+        
+        // 恢复更新按钮
+        function restoreUpdateBtn(procedureName) {
+            const container = document.querySelector('#competitorsPage > div > div');
+            
+            // 清空容器
+            container.innerHTML = '';
+            
+            // 创建标题
+            const title = document.createElement('h2');
+            title.style = 'color: #1E4A76; font-size: 24px; margin: 0;';
+            title.textContent = '机器人手术产品核心参数对比';
+            
+            // 创建更新按钮
+            const updateBtn = document.createElement('button');
+            updateBtn.id = 'updateCompetitorsBtn';
+            updateBtn.style = 'padding: 12px 24px; background: linear-gradient(135deg, #357ABD, #4A90E2); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);';
+            updateBtn.textContent = '更新数据';
+            
+            // 添加点击事件
+            updateBtn.addEventListener('click', function() {
+                updateCompetitorsData(procedureName);
+            });
+            
+            // 设置容器为flex布局
+            container.style.display = 'flex';
+            container.style.justifyContent = 'space-between';
+            container.style.alignItems = 'center';
+            container.style.marginBottom = '30px';
+            
+            // 添加标题和按钮到容器
+            container.appendChild(title);
+            container.appendChild(updateBtn);
         }
         
         // 显示默认竞品数据
@@ -3310,49 +4060,6 @@
         }
         
         // 搜索功能
-        // 更新竞品数据
-        function updateCompetitorsData(procedureName) {
-            // 显示加载状态
-            const updateBtn = document.getElementById('updateCompetitorsBtn');
-            const originalText = updateBtn.textContent;
-            updateBtn.textContent = '更新中...';
-            updateBtn.disabled = true;
-            
-            // 调用后端API更新竞品数据
-            fetch('/api/competitors/update', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ procedureName, username: currentUser })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    if (data.isUpToDate) {
-                        // 数据已经是最新的
-                        alert(data.message || '当前数据信息已经是最新信息！');
-                    } else {
-                        // 数据更新成功
-                        alert('数据更新成功！');
-                        // 重新加载竞品数据
-                        loadCompetitors(procedureName);
-                    }
-                } else {
-                    alert('数据更新失败：' + (data.error || '未知错误'));
-                }
-            })
-            .catch(error => {
-                console.error('更新竞品数据失败:', error);
-                alert('数据更新失败，请稍后重试');
-            })
-            .finally(() => {
-                // 恢复按钮状态
-                updateBtn.textContent = originalText;
-                updateBtn.disabled = false;
-            });
-        }
-
         function initSearch() {
             const searchBtn = document.getElementById('searchBtn');
             const searchInput = document.getElementById('searchInput');
@@ -3592,6 +4299,23 @@
                     // 显示传统手术视频，隐藏机器人手术视频
                     traditionalSection.style.display = 'block';
                     roboticSection.style.display = 'none';
+                    
+                    // 更新手术步骤为传统手术步骤
+                    if (currentProcedureData) {
+                        const procedureSteps = document.getElementById('procedureSteps');
+                        procedureSteps.innerHTML = '';
+                        const stepsToShow = currentProcedureData.traditionalSteps && Array.isArray(currentProcedureData.traditionalSteps) ? currentProcedureData.traditionalSteps : 
+                                          (currentProcedureData.steps && Array.isArray(currentProcedureData.steps) ? currentProcedureData.steps : []);
+                        stepsToShow.forEach(step => {
+                            const stepItem = document.createElement('div');
+                            stepItem.style = 'display: flex; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #E2E8F0;';
+                            stepItem.innerHTML = `
+                                <div style="width: 100px; font-weight: bold; color: #1E4A76; font-size: 16px;">${step.timestamp}s</div>
+                                <div style="flex: 1; font-size: 16px; color: #333;">${step.name}</div>
+                            `;
+                            procedureSteps.appendChild(stepItem);
+                        });
+                    }
                 });
                 
                 roboticBtn.addEventListener('click', function() {
@@ -3608,6 +4332,23 @@
                     // 显示机器人手术视频，隐藏传统手术视频
                     roboticSection.style.display = 'block';
                     traditionalSection.style.display = 'none';
+                    
+                    // 更新手术步骤为机器人手术步骤
+                    if (currentProcedureData) {
+                        const procedureSteps = document.getElementById('procedureSteps');
+                        procedureSteps.innerHTML = '';
+                        const stepsToShow = currentProcedureData.roboticSteps && Array.isArray(currentProcedureData.roboticSteps) ? currentProcedureData.roboticSteps : 
+                                          (currentProcedureData.steps && Array.isArray(currentProcedureData.steps) ? currentProcedureData.steps : []);
+                        stepsToShow.forEach(step => {
+                            const stepItem = document.createElement('div');
+                            stepItem.style = 'display: flex; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #E2E8F0;';
+                            stepItem.innerHTML = `
+                                <div style="width: 100px; font-weight: bold; color: #1E4A76; font-size: 16px;">${step.timestamp}s</div>
+                                <div style="flex: 1; font-size: 16px; color: #333;">${step.name}</div>
+                            `;
+                            procedureSteps.appendChild(stepItem);
+                        });
+                    }
                 });
             }
         }
