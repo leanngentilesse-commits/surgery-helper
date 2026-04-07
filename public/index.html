@@ -1199,7 +1199,7 @@
                 const password = document.getElementById('loginPassword').value;
                 
                 // 从数据库验证
-                fetch('http://localhost:3004/api/users/login', {
+                fetch('/api/users/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1434,7 +1434,7 @@
         // 从API获取术式数据
         async function fetchFromAPI(procedureName) {
             try {
-                const response = await fetch(`http://localhost:3004/api/procedures/${encodeURIComponent(procedureName)}`);
+                const response = await fetch(`/api/procedures/${encodeURIComponent(procedureName)}`);
                 
                 if (!response.ok) {
                     throw new Error(`API响应错误: ${response.status}`);
