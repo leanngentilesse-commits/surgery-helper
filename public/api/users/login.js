@@ -1,6 +1,5 @@
-// Vercel API - 用户登录（通用版：不依赖 Express app / Mongo）
+// Vercel API - 用户登录（兜底：当 Root Directory=public 时也能部署）
 module.exports = async (req, res) => {
-  // CORS（前端同源请求一般不需要，但兜底更稳）
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
